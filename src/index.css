@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #080B14;
+  --bg-secondary: #0D1117;
+  --glass-bg: rgba(255,255,255,0.05);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-hover: rgba(255,255,255,0.08);
+  --glow-purple: rgba(124,58,237,0.4);
+  --glow-blue: rgba(59,130,246,0.4);
+  --glow-emerald: rgba(5,150,105,0.4);
+  --glow-red: rgba(220,38,38,0.4);
+  --glow-amber: rgba(217,119,6,0.4);
+
+  /* Algorithm colors */
+  --algo-epsilon: #7C3AED;
+  --algo-epsilon-decay: #2563EB;
+  --algo-ucb: #059669;
+  --algo-thompson: #DC2626;
+  --algo-dqn: #D97706;
+  --algo-oracle: #6B7280;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-primary);
+  color: white;
+  font-family: 'Inter', system-ui, sans-serif;
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-md border rounded-2xl;
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300;
+  }
+
+  .glass-card-hover:hover {
+    background: var(--glass-hover);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+    transform: translateY(-1px);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 20px var(--glow-purple), 0 0 40px rgba(124,58,237,0.2);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 20px var(--glow-blue), 0 0 40px rgba(59,130,246,0.2);
+  }
+
+  .glow-emerald {
+    box-shadow: 0 0 20px var(--glow-emerald), 0 0 40px rgba(5,150,105,0.2);
+  }
+
+  .glow-red {
+    box-shadow: 0 0 20px var(--glow-red), 0 0 40px rgba(220,38,38,0.2);
+  }
+
+  .glow-amber {
+    box-shadow: 0 0 20px var(--glow-amber), 0 0 40px rgba(217,119,6,0.2);
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+  }
+}
+
+/* Noise overlay */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Recharts customization */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: rgba(13, 17, 23, 0.95) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 8px !important;
+  color: white !important;
+}
+
+.recharts-cartesian-grid line {
+  stroke: rgba(255,255,255,0.05) !important;
+}
+
+.recharts-text {
+  fill: rgba(255,255,255,0.5) !important;
+}
