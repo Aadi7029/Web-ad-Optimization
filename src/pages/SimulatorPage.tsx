@@ -7,13 +7,12 @@ import { ExplorationHeatmap } from '@/components/charts/ExplorationHeatmap';
 import { AlgorithmExplainer } from '@/components/educational/AlgorithmExplainer';
 import { Tabs } from '@/components/ui/Tabs';
 import { useUIStore } from '@/store/uiStore';
-import { BarChart2, Activity, Map } from 'lucide-react';
 
 const chartTabs = [
-  { id: 'reward', label: 'Reward', icon: <Activity size={12} /> },
-  { id: 'regret', label: 'Regret', icon: <BarChart2 size={12} /> },
-  { id: 'ctr', label: 'CTR', icon: <BarChart2 size={12} /> },
-  { id: 'heatmap', label: 'Heatmap', icon: <Map size={12} /> },
+  { id: 'reward', label: 'Reward' },
+  { id: 'regret', label: 'Regret' },
+  { id: 'ctr', label: 'CTR' },
+  { id: 'heatmap', label: 'Heatmap' },
 ];
 
 export function SimulatorPage() {

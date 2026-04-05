@@ -26,7 +26,7 @@ export function SimulationCanvas() {
 
       {/* Agent state cards */}
       {!isIdle && (
-        <div className={cn('grid gap-3', selectedAgentIds.length <= 2 ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-4')}>
+        <div className="grid grid-cols-2 gap-3">
           {selectedAgentIds.map(id => (
             <AgentStateCard key={id} agentId={id} />
           ))}

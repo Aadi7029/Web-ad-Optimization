@@ -1,4 +1,5 @@
 import { useSimulationStore } from '@/store/simulationStore';
+import { useConfigStore } from '@/store/configStore';
 import { ALGORITHM_CONFIGS } from '@/lib/constants';
 import { formatNumber, formatPercent } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -8,14 +9,15 @@ interface AgentStateCardProps {
 }
 
 export function AgentStateCard({ agentId }: AgentStateCardProps) {
-  const { agentStats, status } = useSimulationStore();
+  const { agentStats, status, currentStep } = useSimulationStore();
+  const { environmentConfig } = useConfigStore();
+  const isRevenue = environmentConfig.rewardMode === 'revenue';
   const config = ALGORITHM_CONFIGS.find(c => c.id === agentId);
   const stats = agentStats[agentId];
 
   if (!config) return null;
 
-  const steps = stats?.stepHistory?.length ?? 0;
-  const avgCTR = steps > 0 ? (stats.cumulativeReward / steps) : 0;
+  const avgCTR = currentStep > 0 ? (stats?.cumulativeReward ?? 0) / currentStep : 0;
   const isRunning = status === 'running';
 
   return (
@@ -39,8 +41,10 @@ export function AgentStateCard({ agentId }: AgentStateCardProps) {
           <div className="text-sm font-mono text-white">{formatNumber(stats?.cumulativeReward ?? 0, 0)}</div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-white/30">CTR</div>
-          <div className="text-sm font-mono text-white">{formatPercent(avgCTR)}</div>
+          <div className="text-xs text-white/30">{isRevenue ? 'Rev/step' : 'CTR'}</div>
+          <div className="text-sm font-mono text-white">
+            {isRevenue ? `$${avgCTR.toFixed(2)}` : formatPercent(avgCTR)}
+          </div>
         </div>
         <div className="text-center">
           <div className="text-xs text-white/30">Regret</div>
