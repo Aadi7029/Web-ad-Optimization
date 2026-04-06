@@ -86,7 +86,7 @@ export const ALGORITHM_EXPLAINERS = {
   Q(action) += (r - Q(action)) / N(action)`,
     pros: ['Simple to implement', 'Guaranteed exploration'],
     cons: ['Wastes exploration on suboptimal arms', 'Fixed ε is never optimal long-term'],
-    reference: 'Sutton & Barto, Reinforcement Learning (2018), Chapter 2',
+    reference: 'R. S. Sutton and A. G. Barto, Reinforcement Learning: An Introduction, 2nd ed., MIT Press, 2018.',
   },
   'epsilon-greedy-decaying': {
     title: 'Decaying Epsilon-Greedy',
@@ -99,7 +99,7 @@ For each step t:
     action = argmax Q(a)`,
     pros: ['Asymptotically exploits', 'Lower regret than fixed ε'],
     cons: ['Decay rate is a sensitive hyperparameter', 'Poor if environment is non-stationary'],
-    reference: 'Auer et al., Finite-time Analysis of the Multiarmed Bandit Problem (2002)',
+    reference: 'S. Zhang, "Utilizing reinforcement learning bandit algorithms in advertising optimization," Highlights in Science, Engineering and Technology, vol. 94, pp. 195–200, 2024.',
   },
   'ucb1': {
     title: 'Upper Confidence Bound (UCB1)',
@@ -111,7 +111,7 @@ For each step t:
   update Q(action), N(action)`,
     pros: ['No random exploration (deterministic)', 'Optimal regret O(log t)', 'No hyperparameter tuning needed'],
     cons: ['Requires good initialization', 'May over-explore early'],
-    reference: 'Auer, Cesa-Bianchi, Fischer, Machine Learning (2002)',
+    reference: 'P. Auer, N. Cesa-Bianchi, and P. Fischer, "Finite-time analysis of the multiarmed bandit problem," Machine Learning, vol. 47, pp. 235–256, 2002.',
   },
   'thompson': {
     title: 'Thompson Sampling',
@@ -125,7 +125,7 @@ For each step t:
   β[action] += 1 - r`,
     pros: ['State-of-the-art empirical performance', 'Naturally Bayesian', 'Adapts well to non-stationary environments'],
     cons: ['Computationally heavier (sampling)', 'Assumes Bernoulli rewards', 'Prior choice affects early behavior'],
-    reference: 'Chapelle & Li, An Empirical Evaluation of Thompson Sampling (NeurIPS 2011)',
+    reference: 'O. Chapelle and L. Li, "An empirical evaluation of Thompson sampling," in Advances in Neural Information Processing Systems (NeurIPS), vol. 24, pp. 2249–2257, 2011.',
   },
   'random': {
     title: 'Random Selection',
@@ -136,6 +136,6 @@ For each step t:
   (no update — nothing to learn)`,
     pros: ['Zero hyperparameters', 'Completely unbiased exploration', 'Easy to implement and reason about'],
     cons: ['Never improves', 'Regret grows linearly O(t)', 'No exploitation of past observations'],
-    reference: 'Lattimore & Szepesvári, Bandit Algorithms (2020), Chapter 1 — baseline comparison',
+    reference: 'T. Lattimore and C. Szepesvári, Bandit Algorithms, Cambridge University Press, 2020.',
   },
 };

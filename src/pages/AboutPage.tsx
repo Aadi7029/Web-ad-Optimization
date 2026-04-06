@@ -93,13 +93,28 @@ export function AboutPage() {
         </div>
 
         {/* References */}
-        <div className="glass-card p-4 flex flex-col gap-2">
+        <div className="glass-card p-4 flex flex-col gap-3">
           <h3 className="text-sm font-semibold text-white">References</h3>
-          <ul className="flex flex-col gap-1.5">
-            {Object.values(ALGORITHM_EXPLAINERS).map((e, i) => (
-              <li key={i} className="text-xs text-white/40 italic">{e.reference}</li>
+          <ol className="flex flex-col gap-2 list-none">
+            {[
+              { text: 'P. Auer, N. Cesa-Bianchi, and P. Fischer, "Finite-time analysis of the multiarmed bandit problem," Machine Learning, vol. 47, pp. 235–256, 2002.', href: 'https://link.springer.com/article/10.1023/A:1013689704352' },
+              { text: 'R. S. Sutton and A. G. Barto, Reinforcement Learning: An Introduction, 2nd ed., MIT Press, 2018.', href: 'http://incompleteideas.net/book/the-book-2nd.html' },
+              { text: 'O. Chapelle and L. Li, "An empirical evaluation of Thompson sampling," in Advances in Neural Information Processing Systems (NeurIPS), vol. 24, pp. 2249–2257, 2011.', href: 'https://proceedings.neurips.cc/paper/2011/hash/e53a0a2978c28872a4505bdb51db06dc-Abstract.html' },
+              { text: 'D. Bouneffouf, I. Rish, and C. Aggarwal, "Survey on applications of multi-armed and contextual bandits," in 2020 IEEE Congress on Evolutionary Computation (CEC), Glasgow, UK, pp. 1–8, 2020.', href: 'https://ieeexplore.ieee.org/document/9185782' },
+              { text: 'T. Lattimore and C. Szepesvári, Bandit Algorithms, Cambridge University Press, 2020.', href: 'https://tor-lattimore.com/downloads/book/book.pdf' },
+              { text: 'A. Soboleva et al., "Optimizing online advertising with multi-armed bandits: Mitigating the cold start problem under auction dynamics," arXiv:2502.01867, 2025.', href: 'https://arxiv.org/abs/2502.01867' },
+              { text: 'S. Zhang, "Utilizing reinforcement learning bandit algorithms in advertising optimization," Highlights in Science, Engineering and Technology, vol. 94, pp. 195–200, 2024.', href: 'https://doi.org/10.54097/hset.v94i.p195-200' },
+              { text: 'Anonymous, "Bandit algorithms applied in online advertisement to evaluate click-through rates," in IEEE CCECE, 2023. DOI: 10.1109/CCECE58730.2023.10293356.', href: 'https://ieeexplore.ieee.org/document/10293356' },
+            ].map((ref, i) => (
+              <li key={i} className="text-xs text-white/40 italic flex gap-2">
+                <span className="text-white/25 shrink-0 not-italic font-mono">[{i + 1}]</span>
+                <a href={ref.href} target="_blank" rel="noopener noreferrer"
+                  className="hover:text-purple-400 transition-colors underline underline-offset-2 decoration-white/10 hover:decoration-purple-400/50">
+                  {ref.text}
+                </a>
+              </li>
             ))}
-          </ul>
+          </ol>
         </div>
       </div>
     </div>
