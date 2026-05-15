@@ -4,6 +4,7 @@ import { CumulativeRewardChart } from '@/components/charts/CumulativeRewardChart
 import { RegretChart } from '@/components/charts/RegretChart';
 import { CTROverTimeChart } from '@/components/charts/CTROverTimeChart';
 import { ExplorationHeatmap } from '@/components/charts/ExplorationHeatmap';
+import { OptimalAdsCard } from '@/components/simulation/OptimalAdsCard';
 import { AlgorithmExplainer } from '@/components/educational/AlgorithmExplainer';
 import { Tabs } from '@/components/ui/Tabs';
 import { useUIStore } from '@/store/uiStore';
@@ -37,11 +38,12 @@ export function SimulatorPage() {
             onTabChange={setActiveChartTab}
           />
         </div>
-        <div className="flex-1 overflow-y-auto scrollbar-thin p-4">
+        <div className="flex-1 overflow-y-auto scrollbar-thin p-4 flex flex-col gap-4">
           {activeChartTab === 'reward' && <CumulativeRewardChart />}
           {activeChartTab === 'regret' && <RegretChart />}
           {activeChartTab === 'ctr' && <CTROverTimeChart />}
           {activeChartTab === 'heatmap' && <ExplorationHeatmap />}
+          <OptimalAdsCard />
         </div>
       </div>
 
