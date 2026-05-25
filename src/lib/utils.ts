@@ -36,21 +36,6 @@ export function rollingMean(data: number[], windowSize: number): number[] {
   return result;
 }
 
-// Revenue-mode arm layout designed to showcase UCB1's advantage over Thompson Sampling.
-//
-// The trap: Arm A has LOW CTR but HIGH revenue/click → highest expected revenue (EV).
-//           Arms B/C/D have HIGH CTR but LOW revenue/click → Thompson picks them
-//           because it models click probability, not revenue.
-//           UCB1 is distribution-agnostic — it tracks sample mean reward
-//           (CTR × revenue) and correctly converges to Arm A.
-//
-// Expected value per pull:
-//   Arm A: CTR=0.25 × rev=3.00 → EV=0.750  ← TRUE WINNER (low CTR, high value)
-//   Arm B: CTR=0.45 × rev=0.50 → EV=0.225  ← Thompson's pick (highest CTR)
-//   Arm C: CTR=0.35 × rev=0.60 → EV=0.210
-//   Arm D: CTR=0.20 × rev=0.70 → EV=0.140
-//
-// Pattern repeats for >4 arms — every 4th slot is the revenue winner.
 const DEFAULT_ARM_CTRS    = [0.25, 0.45, 0.35, 0.20,  0.28, 0.42, 0.38, 0.18,
                               0.22, 0.40, 0.32, 0.15,  0.26, 0.44, 0.36, 0.19];
 const DEFAULT_ARM_REVENUE = [3.00, 0.50, 0.60, 0.70,  2.80, 0.55, 0.65, 0.75,
