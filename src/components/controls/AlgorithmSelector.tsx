@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { cn } from '@/lib/utils';
 
-const MAX_SELECTED = 4;
+const MAX_SELECTED = 5;
 
 export function AlgorithmSelector() {
   const { selectedAgentIds, toggleAgent } = useConfigStore();

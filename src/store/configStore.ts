@@ -38,7 +38,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
       if (selectedAgentIds.length > 1) {
         set({ selectedAgentIds: selectedAgentIds.filter(a => a !== id) });
       }
-    } else if (selectedAgentIds.length < 4) {
+    } else if (selectedAgentIds.length < 5) {
       set({ selectedAgentIds: [...selectedAgentIds, id] });
     }
   },
