@@ -58,9 +58,12 @@ export function RegretChart() {
             <Label value={yLabel} angle={-90} position="insideLeft" offset={4} style={{ fontSize: 11, fill: 'rgba(255,255,255,0.55)', textAnchor: 'middle' }} />
           </YAxis>
           <Tooltip
-            contentStyle={{ background: 'rgba(13,17,23,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }}
-            labelStyle={{ color: 'rgba(255,255,255,0.6)' }}
-            itemStyle={{ fontSize: 12 }}
+            position={{ x: 50, y: 0 }}
+            cursor={{ stroke: 'rgba(255,255,255,0.25)', strokeDasharray: '3 3' }}
+            wrapperStyle={{ pointerEvents: 'none', zIndex: 10 }}
+            contentStyle={{ background: 'rgba(13,17,23,0.92)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '6px 8px' }}
+            labelStyle={{ color: 'rgba(255,255,255,0.6)', marginBottom: 2, fontSize: 11 }}
+            itemStyle={{ fontSize: 11, padding: 0, lineHeight: 1.4 }}
             labelFormatter={(v) => `Step ${v}`}
             formatter={(v, name) => [
               `${isRevenue ? '$' : ''}${formatNumber(Number(v ?? 0), 2)}${isRevenue ? '' : ' lost'}`,
