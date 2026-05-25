@@ -20,7 +20,7 @@ interface ConfigState {
 export const useConfigStore = create<ConfigState>((set, get) => ({
   // Default comparison: UCB1 vs ε-Greedy vs Thompson Sampling vs Random baseline
   selectedAgentIds: ['ucb1', 'epsilon-greedy', 'thompson', 'random'],
-  speed: 10,
+  speed: 30,
   totalSteps: DEFAULT_ENV_CONFIG.totalSteps,
   environmentConfig: {
     arms: generateDefaultArms(DEFAULT_ENV_CONFIG.numArms),

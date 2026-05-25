@@ -66,7 +66,7 @@ export const DEFAULT_ENV_CONFIG = {
   nonStationary: true,
   driftRate: 0.002,
   rewardMode: 'revenue' as const,
-  totalSteps: 500,
+  totalSteps: 3000,
 };
 
 export const CHART_COLORS = Object.values(ALGO_COLORS);
