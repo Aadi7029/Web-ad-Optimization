@@ -65,7 +65,7 @@ export function CTROverTimeChart() {
             labelStyle={{ color: 'rgba(255,255,255,0.6)' }}
             itemStyle={{ fontSize: 12 }}
             labelFormatter={(v) => `Step ${v}`}
-            formatter={(v: number, name: string) => [`${(Number(v) * 100).toFixed(2)}%`, name]}
+            formatter={(v, name) => [`${(Number(v ?? 0) * 100).toFixed(2)}%`, String(name)]}
           />
           {metrics.map(m => (
             <Area

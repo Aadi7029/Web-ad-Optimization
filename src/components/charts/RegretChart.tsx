@@ -62,9 +62,9 @@ export function RegretChart() {
             labelStyle={{ color: 'rgba(255,255,255,0.6)' }}
             itemStyle={{ fontSize: 12 }}
             labelFormatter={(v) => `Step ${v}`}
-            formatter={(v: number, name: string) => [
-              `${isRevenue ? '$' : ''}${formatNumber(Number(v), 2)}${isRevenue ? '' : ' lost'}`,
-              name,
+            formatter={(v, name) => [
+              `${isRevenue ? '$' : ''}${formatNumber(Number(v ?? 0), 2)}${isRevenue ? '' : ' lost'}`,
+              String(name),
             ]}
           />
           {metrics.map(m => (

@@ -65,9 +65,9 @@ export function CumulativeRewardChart() {
             labelStyle={{ color: 'rgba(255,255,255,0.6)' }}
             itemStyle={{ fontSize: 12 }}
             labelFormatter={(v) => `Step ${v}`}
-            formatter={(v: number, name: string) => [
-              `${isRevenue ? '$' : ''}${formatNumber(Number(v), 2)}${unitSuffix}`,
-              name,
+            formatter={(v, name) => [
+              `${isRevenue ? '$' : ''}${formatNumber(Number(v ?? 0), 2)}${unitSuffix}`,
+              String(name),
             ]}
           />
           {metrics.map(m => (
