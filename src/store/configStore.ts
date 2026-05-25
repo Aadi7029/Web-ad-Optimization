@@ -18,8 +18,8 @@ interface ConfigState {
 }
 
 export const useConfigStore = create<ConfigState>((set, get) => ({
-  // UCB1 vs its direct competitors in the stationary short-horizon scenario
-  selectedAgentIds: ['ucb1', 'epsilon-greedy', 'epsilon-greedy-decaying', 'random'],
+  // Default comparison: UCB1 vs ε-Greedy vs Thompson Sampling vs Random baseline
+  selectedAgentIds: ['ucb1', 'epsilon-greedy', 'thompson', 'random'],
   speed: 10,
   totalSteps: DEFAULT_ENV_CONFIG.totalSteps,
   environmentConfig: {

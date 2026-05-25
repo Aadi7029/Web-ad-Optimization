@@ -1,26 +1,31 @@
 import { useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label } from 'recharts';
 import { useAlgorithmComparison } from '@/hooks/useAlgorithmComparison';
+import { useSimulationStore } from '@/store/simulationStore';
 import { ChartContainer } from './ChartContainer';
 
 export function CTROverTimeChart() {
   const metrics = useAlgorithmComparison();
+  const { currentStep } = useSimulationStore();
 
   const data = useMemo(() => {
     const maxLen = Math.max(...metrics.map(m => m.rollingCTR.length), 0);
     if (maxLen === 0) return [];
+    const downsample = Math.max(1, Math.floor(currentStep / Math.max(maxLen, 1)));
     return Array.from({ length: maxLen }, (_, i) => {
-      const point: Record<string, number> = { step: i };
+      const point: Record<string, number> = { step: i * downsample };
       metrics.forEach(m => {
         point[m.agentId] = m.rollingCTR[i] ?? 0;
       });
       return point;
     });
-  }, [metrics]);
+  }, [metrics, currentStep]);
+
+  const subtitle = '50-step rolling click-through rate — higher is better';
 
   if (data.length === 0) {
     return (
-      <ChartContainer title="Rolling CTR" subtitle="50-step rolling click-through rate">
+      <ChartContainer title="Rolling CTR" subtitle={subtitle}>
         <div className="h-48 flex items-center justify-center text-white/30 text-sm">
           Start simulation to see data
         </div>
@@ -29,9 +34,9 @@ export function CTROverTimeChart() {
   }
 
   return (
-    <ChartContainer title="Rolling CTR" subtitle="50-step rolling click-through rate">
-      <ResponsiveContainer width="100%" height={200}>
-        <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
+    <ChartContainer title="Rolling CTR" subtitle={subtitle}>
+      <ResponsiveContainer width="100%" height={220}>
+        <AreaChart data={data} margin={{ top: 8, right: 14, bottom: 28, left: 18 }}>
           <defs>
             {metrics.map(m => (
               <linearGradient key={m.agentId} id={`grad-${m.agentId}`} x1="0" y1="0" x2="0" y2="1">
@@ -40,13 +45,27 @@ export function CTROverTimeChart() {
               </linearGradient>
             ))}
           </defs>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="step" tick={{ fontSize: 10 }} />
-          <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+          <XAxis
+            dataKey="step"
+            tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }}
+            stroke="rgba(255,255,255,0.2)"
+          >
+            <Label value="Impression (step t)" position="insideBottom" offset={-14} style={{ fontSize: 11, fill: 'rgba(255,255,255,0.55)' }} />
+          </XAxis>
+          <YAxis
+            tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }}
+            stroke="rgba(255,255,255,0.2)"
+            tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
+          >
+            <Label value="Click-through rate" angle={-90} position="insideLeft" offset={4} style={{ fontSize: 11, fill: 'rgba(255,255,255,0.55)', textAnchor: 'middle' }} />
+          </YAxis>
           <Tooltip
             contentStyle={{ background: 'rgba(13,17,23,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }}
+            labelStyle={{ color: 'rgba(255,255,255,0.6)' }}
             itemStyle={{ fontSize: 12 }}
-            formatter={(v) => [`${(Number(v) * 100).toFixed(1)}%`]}
+            labelFormatter={(v) => `Step ${v}`}
+            formatter={(v: number, name: string) => [`${(Number(v) * 100).toFixed(2)}%`, name]}
           />
           {metrics.map(m => (
             <Area
@@ -63,6 +82,14 @@ export function CTROverTimeChart() {
           ))}
         </AreaChart>
       </ResponsiveContainer>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1">
+        {metrics.map(m => (
+          <div key={m.agentId} className="flex items-center gap-1.5 text-[11px] text-white/60">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: m.color }} />
+            <span>{m.name}</span>
+          </div>
+        ))}
+      </div>
     </ChartContainer>
   );
 }

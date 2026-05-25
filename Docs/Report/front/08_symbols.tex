@@ -1,0 +1,53 @@
+% ---------- List of Symbols (ix) ----------
+\begin{center}{\Large\bfseries LIST OF SYMBOLS}\end{center}
+\vspace{0.5em}
+
+\renewcommand{\arraystretch}{1.35}
+\begin{xltabular}{\linewidth}{@{}p{3.0cm} X@{}}
+$K$                 & Number of advertisement arms in the bandit environment\\
+$T$                 & Total number of simulated steps in a session (horizon)\\
+$t$                 & Discrete round index, $t = 1, 2, \ldots, T$\\
+$a$                 & Index of an advertisement arm, $a \in \{1, \ldots, K\}$\\
+$a^\star$           & The oracle-optimal arm under the chosen reward mode\\
+$a_t$               & Arm chosen by the agent at round $t$\\
+$p_a$               & True click probability of arm $a$\\
+$r_a$               & Revenue per click of arm $a$ (USD)\\
+$c_a$               & Bernoulli click outcome of arm $a$: $c_a \in \{0, 1\}$\\
+$R_t$               & Scalar reward observed by the agent at round $t$\\
+$\mu_a$             & Expected reward of arm $a$ ($p_a$ in CTR mode; $p_a r_a$ in Revenue mode)\\
+$\mu^\star$         & Oracle's optimal expected reward, $\mu^\star = \max_a \mu_a$\\
+$Q_t(a)$            & Sample-mean estimate of arm $a$'s expected reward at round $t$\\
+$N_t(a)$            & Number of times arm $a$ has been pulled up to round $t$\\
+$\rho_t$            & Instantaneous regret at round $t$: $\rho_t = \mu^\star - \mu_{a_t}$\\
+$\mathcal{R}_T$     & Cumulative regret over $T$ rounds: $\sum_{t=1}^{T} (\mu^\star - R_t)_+$\\
+$G_T$               & Cumulative reward over $T$ rounds: $\sum_{t=1}^{T} R_t$\\
+$\widehat{\text{CTR}}_t$ & Rolling click-through rate over a $W$-step window\\
+$W$                 & Rolling-window width (default $W = 50$)\\
+$\tau$              & Convergence step: earliest $t$ at which $\widehat{\text{CTR}}_s \ge 0.8 \mu^\star$ for all $s \ge t$\\
+$S_T$               & Selection share of the optimal arm: $N_T(a^\star)/T$\\
+$H_T$               & Shannon entropy of the empirical arm-selection distribution\\
+$\varepsilon$       & Exploration rate in $\varepsilon$-Greedy (default 0.10)\\
+$\varepsilon_0$     & Initial exploration rate in Decaying $\varepsilon$-Greedy (default 1.0)\\
+$\beta$             & Decay rate in Decaying $\varepsilon$-Greedy (default $10^{-3}$)\\
+$\beta_d$           & Drift rate in the non-stationary environment (default 0.002)\\
+$c$                 & Confidence constant in UCB1 (default 1.0)\\
+$\alpha_a, \beta_a$ & Beta-posterior parameters of arm $a$ in Thompson Sampling\\
+$\alpha_0, \beta_0$ & Beta prior in Thompson Sampling (default Beta(1,1))\\
+$\tilde{\theta}_a$  & Sample drawn from $\mathrm{Beta}(\alpha_a, \beta_a)$\\
+$N$                 & Number of independent runs in the experimental campaign (default 100)\\
+$\Delta_a$          & Sub-optimality gap of arm $a$: $\Delta_a = \mu^\star - \mu_a$\\
+$\Delta_{\min}$     & Smallest non-zero sub-optimality gap, $\min_{a:\Delta_a>0}\Delta_a$\\
+$\sigma$            & Sample standard deviation of a metric across runs\\
+$\bar{x}$           & Sample mean of a metric across runs\\
+$\mathcal{O}(\cdot)$ & Big-O asymptotic notation\\
+$\Theta(\cdot)$     & Tight asymptotic notation (both upper and lower bounds)\\
+$\mathbb{E}[\cdot]$  & Expectation operator\\
+$\mathbf{1}\{\cdot\}$ & Indicator function (1 if condition holds, 0 otherwise)\\
+$\mathrm{Bern}(p)$  & Bernoulli distribution with success probability $p$\\
+$\mathrm{Beta}(\alpha,\beta)$ & Beta distribution with shape parameters $\alpha,\beta$\\
+$\mathrm{Uniform}(S)$ & Discrete uniform distribution over the set $S$\\
+$\arg\max_a f(a)$   & Argument that maximises $f$ over the arm set\\
+$\ln(\cdot)$        & Natural logarithm (base $e$)\\
+$\log_2(\cdot)$     & Binary logarithm (base 2), used in entropy\\
+\end{xltabular}
+\newpage

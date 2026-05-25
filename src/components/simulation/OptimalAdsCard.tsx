@@ -8,21 +8,25 @@ import { argmax, formatPercent, formatNumber } from '@/lib/utils';
 export function OptimalAdsCard() {
   const { trueCTRs, status, currentStep } = useSimulationStore();
   const { environmentConfig } = useConfigStore();
-  const { arms, rewardMode } = environmentConfig;
+  const { arms, rewardMode, nonStationary } = environmentConfig;
   const metrics = useAlgorithmComparison();
 
-  const { bestCtrIdx, bestRevIdx, expectedValues, isTrap } = useMemo(() => {
-    const ctrs = arms.map((a, i) => trueCTRs[i] ?? a.trueCTR);
-    const evs = arms.map((a, i) => ctrs[i] * a.revenuePerClick);
+  // "TRUE WINNER" is derived from BASELINE arm values (the un-drifted ground
+  // truth). This keeps the panel stable across the run and gives a fixed target
+  // for algorithms to converge to — matching what a no-forgetting bandit like
+  // UCB1 actually tracks (the long-run sample mean of reward).
+  const { bestCtrIdx, bestRevIdx, baselineEVs, isTrap } = useMemo(() => {
+    const ctrs = arms.map((a) => a.trueCTR);
+    const evs = arms.map((a) => a.trueCTR * a.revenuePerClick);
     const ctrIdx = argmax(ctrs);
     const revIdx = argmax(evs);
     return {
       bestCtrIdx: ctrIdx,
       bestRevIdx: revIdx,
-      expectedValues: evs,
+      baselineEVs: evs,
       isTrap: ctrIdx !== revIdx,
     };
-  }, [arms, trueCTRs]);
+  }, [arms]);
 
   const leader = useMemo(() => {
     const withData = metrics.filter(m =>
@@ -51,9 +55,16 @@ export function OptimalAdsCard() {
   const letter = (i: number) => String.fromCharCode(65 + i);
   const ctrArm = arms[bestCtrIdx];
   const revArm = arms[bestRevIdx];
+  // Arm IDENTITY is baseline-locked (bestCtrIdx / bestRevIdx) so labels don't
+  // flicker, but the DISPLAYED CTR / EV values are LIVE (drifted) — that lets
+  // users see the environment evolve while keeping the "TRUE WINNER" claim
+  // honest as a long-run statement.
   const bestCtr = trueCTRs[bestCtrIdx] ?? ctrArm?.trueCTR ?? 0;
   const bestRevCtr = trueCTRs[bestRevIdx] ?? revArm?.trueCTR ?? 0;
-  const bestEv = expectedValues[bestRevIdx] ?? 0;
+  const bestEv = bestRevCtr * (revArm?.revenuePerClick ?? 0);
+  // Baseline reference shown as a secondary annotation when drift is active.
+  const baselineCtr = ctrArm?.trueCTR ?? 0;
+  const baselineEv = baselineEVs[bestRevIdx] ?? 0;
 
   if (!ctrArm || !revArm) {
     return (
@@ -77,7 +88,7 @@ export function OptimalAdsCard() {
       }
     >
       <div className="flex flex-col gap-2">
-        {/* Top CTR row */}
+        {/* Top CTR row (baseline) */}
         <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-emerald-500/20">
           <div
             className="w-10 h-10 rounded-lg flex items-center justify-center text-base font-bold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 shrink-0"
@@ -86,7 +97,7 @@ export function OptimalAdsCard() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[10px] uppercase tracking-wider text-emerald-300/70">
-              Top CTR
+              Top CTR {nonStationary && <span className="text-white/40">· baseline-anchored arm</span>}
             </div>
             <div className="text-sm font-semibold text-white truncate">
               Ad {letter(bestCtrIdx)} — {formatPercent(bestCtr)}
@@ -95,6 +106,9 @@ export function OptimalAdsCard() {
               ${formatNumber(ctrArm.revenuePerClick)}/click
               {' · '}
               EV ${formatNumber(bestCtr * ctrArm.revenuePerClick)}/imp
+              {nonStationary && (
+                <span className="text-white/30"> · baseline {formatPercent(baselineCtr)}</span>
+              )}
             </div>
           </div>
         </div>
@@ -121,13 +135,16 @@ export function OptimalAdsCard() {
                   isTrap ? 'text-amber-300/80' : 'text-emerald-300/70'
                 }`}
               >
-                Top Revenue {isTrap && '(true winner)'}
+                Top Revenue {isTrap && '(true winner)'} {nonStationary && <span className="text-white/40">· baseline-anchored arm</span>}
               </div>
               <div className="text-sm font-semibold text-white truncate">
                 Ad {letter(bestRevIdx)} — ${formatNumber(bestEv)}/imp
               </div>
               <div className="text-[11px] text-white/40 truncate">
                 {formatPercent(bestRevCtr)} CTR × ${formatNumber(revArm.revenuePerClick)}/click
+                {nonStationary && (
+                  <span className="text-white/30"> · baseline ${formatNumber(baselineEv)}/imp</span>
+                )}
               </div>
             </div>
           </div>

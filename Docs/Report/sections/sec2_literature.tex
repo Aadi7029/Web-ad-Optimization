@@ -1,0 +1,117 @@
+\section{LITERATURE SURVEY}
+
+\subsection{Review of Existing Systems / Related Work}
+Current approaches to web-advertisement selection in industry mostly depend on a handful of well-established techniques that range from very simple to quite sophisticated. At the simple end, many platforms still use either even-rotation (each candidate creative is shown an equal number of times) or manual A/B testing (a fixed share of traffic is allocated to each variant for a pre-specified test duration, and the winner is then rolled out to one hundred per cent of traffic). At the more sophisticated end, large ad-tech companies use online logistic-regression models, contextual bandits, and in some cases deep reinforcement-learning agents that incorporate user-, page- and time-of-day context. The academic foundation that underlies all of this work is the multi-armed bandit problem, first formalised by Robbins in 1952 and given its modern asymptotic-regret theory by Lai and Robbins in 1985.
+
+Between these two extremes sits a large body of algorithmic work --- finite-time UCB analyses, posterior-sampling rediscoveries, KL-based confidence bounds, sliding-window adaptations to non-stationary rewards, off-policy evaluators for safe online deployment, and contextual extensions of every one of these ideas. Below we summarise the contributions of fifteen representative papers, organised so that each row in the table captures the dataset used, the algorithms compared, the reported results, and the residual limitations that motivate further work.
+
+{\renewcommand{\arraystretch}{1.25}\small
+\begin{xltabular}{\linewidth}{|p{2.8cm}|p{3.0cm}|X|X|}
+\caption{Research Papers}\label{tab:lit}\\
+\hline
+\rowcolor{tabhead}\textbf{DATASET} & \textbf{ALGORITHM USED} & \textbf{RESULT} & \textbf{LIMITATIONS}\\
+\hline
+\endfirsthead
+\multicolumn{4}{l}{\textit{(continued from previous page)}}\\
+\hline
+\rowcolor{tabhead}\textbf{DATASET} & \textbf{ALGORITHM USED} & \textbf{RESULT} & \textbf{LIMITATIONS}\\
+\hline
+\endhead
+\hline
+\multicolumn{4}{r}{\textit{continued on next page}}\\
+\endfoot
+\hline
+\endlastfoot
+Synthetic Bernoulli arms with varying CTR; classic 10-armed testbed.~[1] & UCB1, UCB2, $\varepsilon$-Greedy, Softmax. & UCB1 achieves logarithmic regret with no tuning; $c=1$ is the proven optimal constant for Bernoulli arms. & No contextual features; assumes stationary rewards.\\
+\hline
+Yahoo! news front-page click logs (Today Module, 45M events).~[2] & LinUCB (contextual UCB) vs.\ $\varepsilon$-Greedy. & LinUCB lifted CTR by 12.5\% over the production baseline. & Off-policy evaluation needed; results specific to news content.\\
+\hline
+Bing / Yahoo! display-ad logs for empirical bandit comparison.~[3] & Thompson Sampling, UCB1, $\varepsilon$-Greedy. & Thompson Sampling outperforms UCB1 in delayed-feedback ad serving; finite-time regret near optimal. & Bernoulli reward assumption; needs proper prior calibration.\\
+\hline
+Google ads click prediction trenches (production scale).~[4] & FTRL-Proximal logistic regression with per-coordinate learning rate. & Online learning at billions of events / day with strong sparse-feature handling. & Linear model; misses non-linear feature interactions.\\
+\hline
+Marketing-science display advertising campaigns.~[5] & Bayesian MAB on real campaigns; multi-armed experiments. & Multi-armed bandits delivered measurable lifts vs.\ fixed-rotation A/B tests on live traffic. & Limited to small candidate pool; long convergence under low CTR.\\
+\hline
+Long-horizon ad recommendation (Adobe, life-time value).~[6] & Policy-gradient deep RL with LTV reward. & Long-horizon optimisation gave higher cumulative revenue than myopic CTR maximisation. & Sample-hungry; requires substantial logged data.\\
+\hline
+Yahoo!~R6 / Criteo / Open Bandit datasets benchmark.~[7] & 21 contextual-bandit algorithms compared. & No single algorithm dominates; epoch-greedy, cover-NU and online-cover are strongest on average. & Off-policy estimation noise; large-action-space hardness.\\
+\hline
+Display advertising counterfactual learning (industrial scale).~[8] & IPS-weighted policy learning, doubly-robust estimation. & Counterfactual estimators allowed off-policy training without random exploration. & High variance under skewed propensities; explore--exploit trade-off remains.\\
+\hline
+RTB display-ad bid optimisation.~[9] & Deep RL with state-action Q-network. & Higher win-rate at fixed budget vs.\ rule-based bidder. & Requires real-time integration with the exchange.\\
+\hline
+KL-UCB bounded-bandit benchmark.~[10] & KL-UCB, UCB1, Thompson Sampling. & KL-UCB matches the Lai--Robbins lower bound; outperforms UCB1 on near-uniform arms. & Heavier per-step computation due to KL projection.\\
+\hline
+Non-stationary multi-armed bandit benchmark.~[11,12] & Discounted-UCB, Sliding-Window UCB. & Recovers most regret lost to drift; sliding window with $w \approx \sqrt{T}$ is robust. & Needs prior knowledge of drift rate.\\
+\hline
+Ensemble contextual bandits for recommender systems.~[13] & Ensemble of UCB / Thompson / EpsilonGreedy. & Ensembles consistently match or beat the best single agent at run-time. & Increased latency; tie-breaking heuristics are sensitive.\\
+\hline
+Asymptotic analysis of allocation rules.~[16] & Lai--Robbins lower-bound analysis. & Proved that no admissible policy can have less than logarithmic regret. & Asymptotic only; no finite-time guarantees.\\
+\hline
+Bayesian posterior sampling (origin, 1933).~[17] & Posterior sampling (Thompson). & Earliest formal proposal for randomised arm selection by posterior probability. & Heuristic at proposal time; regret bounds proved 70 years later.\\
+\hline
+Information-directed sampling generalisation.~[18] & Information-directed sampling (IDS). & Generalises Thompson Sampling; tight regret guarantees on non-independent-arm problems. & Computationally expensive for large action spaces.\\
+\hline
+Deep Bayesian bandits showdown (Riquelme et al., 2018).~[19] & 14 Bayesian deep-net approximations of TS. & MC-dropout, variational and bootstrap variants all under-perform a well-tuned linear TS on most benchmarks. & Limited to medium-scale tabular environments.\\
+\hline
+Contextual bandit reduction to cost-sensitive classification.~[20] & Bag, Cover, Online-Cover. & Reduces contextual bandits to supervised cost-sensitive learning with strong theoretical guarantees. & Requires off-policy estimator quality control.\\
+\hline
+Vowpal Wabbit production contextual-bandit deployment.~[21] & Online cover with importance-weighting. & Demonstrated robust large-scale deployment of contextual bandits in production. & Sensitive to feature drift over very long horizons.\\
+\hline
+\end{xltabular}}
+
+\paragraph{Index policies and the UCB family.}
+The UCB family of algorithms, beginning with Auer, Cesa-Bianchi and Fischer's UCB1 in 2002~[1], is the canonical example of frequentist optimism under uncertainty. UCB1 maintains a sample-mean estimate $Q(a)$ and a deterministic confidence bonus $c\sqrt{\ln t / N(a)}$ that decays as the arm is sampled more often. The algorithm has no random component, which makes it trivially reproducible and easy to audit --- a non-trivial operational advantage in production ad systems where the policy's decisions may need to be defended after the fact. The finite-time regret bound for UCB1 is $\mathcal{O}(\log t)$, matching the asymptotic lower bound of Lai and Robbins~[16] up to a constant. Garivier and Cappé tightened the constant in KL-UCB~[10], replacing the Hoeffding-style bonus with a Kullback--Leibler concentration term and achieving constants matching the Lai--Robbins lower bound exactly. Sliding-window and discounted variants by Garivier and Moulines~[11] extend the family to non-stationary rewards by forgetting old samples at a controlled rate.
+
+\paragraph{Thompson Sampling and its rediscovery.}
+Thompson's 1933 paper~[17] proposed sampling from the posterior distribution of each arm's expected reward and selecting the arm whose sample is highest. The idea was largely ignored for seven decades. Chapelle and Li~[3] reintroduced Thompson Sampling to the bandit community with a strong empirical evaluation on real ad-click data from Yahoo! and Bing, showing it consistently outperformed UCB1 in production conditions. Agrawal and Goyal then proved that Thompson Sampling achieves logarithmic regret matching UCB1, settling decades of conjecture. Russo and Van Roy generalised the analysis through information-directed sampling~[18]. In production, Thompson Sampling has become a workhorse because its sampling step naturally degrades to soft exploitation as posteriors sharpen, because it composes cleanly with contextual extensions, and because the Bayesian framing makes it easy to incorporate informative priors when historical data is available.
+
+\paragraph{$\varepsilon$-Greedy: simple, durable, often suboptimal.}
+The $\varepsilon$-Greedy family --- fixed $\varepsilon$ and its decaying variants --- remains the most widely deployed bandit strategy in practice, primarily because of its operational simplicity. With probability $\varepsilon$ the agent explores uniformly at random; with probability $1-\varepsilon$ it picks the empirical-best arm. The pathology is well-known: a fixed $\varepsilon$ wastes a constant fraction of impressions on uniform random exploration forever, accumulating linear-in-$t$ regret on the explored fraction even after the optimal arm is identified. Decaying schedules of the form $\varepsilon(t) = \varepsilon_0 / (1 + \beta t)$ recover sub-linear regret in stationary settings but introduce a sensitive hyperparameter $\beta$ whose ideal value depends on the gap between the best and second-best arm --- precisely the quantity the algorithm is trying to discover. Sutton and Barto's textbook~[14] provides the standard treatment.
+
+\paragraph{Contextual bandits and large-scale deployment.}
+Most modern ad-serving research has moved beyond pure MAB to the \emph{contextual} bandit, in which the agent observes a feature vector $x_t$ before choosing an arm. Li, Chu, Langford and Schapire's LinUCB~[2] models the expected reward of arm $a$ in context $x$ as $x^\top \theta_a$ and applies a ridge-regression-based confidence bound. Their work on the Yahoo! news front page was the first large-scale demonstration that contextual bandits could meaningfully improve CTR over both editorial baselines and non-contextual MAB. Beygelzimer et al.~[20] reduced contextual bandits to cost-sensitive classification, and Agarwal et al.~[21] produced efficient implementations suitable for production scale (the \texttt{Vowpal Wabbit} library). McMahan et al.~[4] documented Google's production click-prediction system in their landmark ``view from the trenches'' paper, including the FTRL-Proximal online optimiser and a number of pragmatic engineering lessons.
+
+\paragraph{Deep reinforcement learning and ad allocation.}
+As inventory and contextual signals grew richer, the community turned to deep RL. Theocharous, Thomas and Ghavamzadeh~[6] formulated personalised ad recommendation as a long-horizon MDP --- accounting for the fact that the same user returns repeatedly and that today's recommendation affects tomorrow's engagement --- and demonstrated significant lifetime-value gains over myopic policies. Zhao et al.\ and Cai et al.~[9] applied deep $Q$-learning and policy-gradient methods to bid optimisation and slot allocation in real-time bidding. Mnih et al.'s original DQN paper~[15] provides the algorithmic backbone for many of these approaches. While powerful, deep RL for ads is sample-hungry and difficult to debug; bandit baselines remain the operating point for many systems, with deep RL deployed selectively for personalisation in high-traffic surfaces. Riquelme et al.~[19] published a rigorous showdown of fourteen Bayesian deep-network approximations of Thompson Sampling and showed that, on tabular benchmarks, a well-tuned linear Thompson Sampling typically outperforms the deep variants --- an important cautionary note against premature complexity.
+
+\paragraph{Non-stationary and adversarial settings.}
+Real ad traffic is rarely stationary: creative fatigue, seasonality and competitor behaviour all cause underlying CTRs to drift. Garivier and Moulines~[11] introduced discounted and sliding-window UCB variants to address this. Besson and Kaufmann~[12] provide a thorough empirical study showing that even simple sliding-window adaptations can recover most of the performance lost to stationarity violations. Our implementation supports an optional sinusoidal-drift mode in the environment, which allows us to inspect how each of our five canonical algorithms behaves under mild non-stationarity, even though the formal analyses assume a stationary environment.
+
+\paragraph{Counterfactual evaluation and the offline--online gap.}
+A persistent practical problem in ad-tech is that one cannot freely run randomised experiments on live traffic: every impression has a cost. Bottou et al.~[8] formalised counterfactual reasoning for learning systems and proposed inverse-propensity-score (IPS) and doubly-robust estimators that allow off-policy evaluation of new bandit algorithms from logged data of a previous policy. Our simulator, being a fully synthetic environment, sidesteps these issues but the methodology is critical context for any reader who wishes to apply our findings to real logged data.
+
+\paragraph{Reward design: CTR vs.\ revenue vs.\ long-term value.}
+A subtle but important strand of recent work concerns the choice of reward signal itself. Schwartz, Bradlow and Fader~[5] demonstrated that optimising customer acquisition under risk-aversion materially changes the policy. Theocharous et al.~[6] argued for long-term-value rewards rather than immediate click revenue, anticipating effects such as ad fatigue and unsubscription. These observations motivate our decision to expose both CTR and Revenue reward modes in the simulator: they yield qualitatively different optimal-arm rankings on realistic configurations and reveal which algorithms are robust to the choice and which are not.
+
+\paragraph{Pedagogical and open-source efforts.}
+Vermorel and Mohri produced one of the first systematic empirical evaluations of bandit algorithms aimed at practitioners. The \texttt{contextualbandits}, \texttt{Vowpal Wabbit} and \texttt{StreamingBandit} libraries have since become standard tools. Browser-based interactive demonstrations are rarer but increasingly common; the present work contributes to this category, with the distinguishing properties of (i) implementing the algorithms from first principles in TypeScript rather than wrapping a server-side library, (ii) rendering the agents' internal state alongside their performance metrics, and (iii) persisting run history locally for long-run comparison across many simulations.
+
+\subsection{Research Gaps Identified}
+The literature reviewed in Section~2.1 makes it clear that bandit theory has reached a level of maturity that should, in principle, eliminate the most common pathologies of rule-based selection. In practice, however, several gaps remain that motivate the present work:
+
+\begin{enumerate}
+\item \textbf{Reward-mismatch in operational systems.} The bandit literature is overwhelmingly framed in terms of an abstract scalar reward, and practical deployments often default to CTR as the reward signal because it is the easiest to instrument. As Schwartz et al.~[5] and our own experiments demonstrate in Section~4, this proxy can systematically mislead policies whose internal models assume a Bernoulli reward distribution (notably Thompson Sampling with a Beta prior). The gap between ``what the literature analyses'' and ``what an ad system actually pays out'' is rarely surfaced explicitly in pedagogical material.
+
+\item \textbf{Lack of side-by-side, interactive comparison.} Most published evaluations of bandit algorithms report aggregate metrics on a single dataset, with each algorithm run independently and possibly on different random seeds. A learner who wants to internalise the qualitative differences between, say, UCB1 and Thompson Sampling cannot easily inspect their decision-by-decision behaviour on the \emph{same} trajectory. We address this by running all agents synchronously on a shared environment with a single shared random seed.
+
+\item \textbf{Opacity of internal state.} The deeper a bandit algorithm's mechanism (UCB scores, Beta posteriors, deep $Q$-values), the less accessible it is to a non-specialist. Even production engineers responsible for operating bandit systems often treat them as black boxes. Surfacing internal quantities --- the current value estimates, the confidence bonus terms, the alpha/beta of each arm's posterior --- in a live visualisation closes this gap and supports both debugging and education.
+
+\item \textbf{Limited treatment of non-stationarity in introductory material.} The standard pedagogical treatment of bandits assumes stationary arms. Real ad inventory is non-stationary~[11, 12]. While our implementation does not include a sliding-window UCB or a discounting-Thompson variant, it does support an optional drift mode in the environment, which allows us to demonstrate the consequences of stationarity violations on each of the five canonical algorithms.
+
+\item \textbf{Class-imbalance and sparse rewards.} Real ad CTRs are usually below one per cent~[4]. Algorithms that converge quickly under a 10\%--40\% CTR profile may struggle when most impressions return zero reward. Few introductory simulators expose this issue; our default scenario operates in the 25\%--60\% range for tractability, but the configuration UI allows users to push CTRs below 5\% and observe the dramatic increase in required steps before convergence.
+
+\item \textbf{The deployment and maintenance gap.} Nearly all academic work on bandits stops at offline evaluation. Production deployment introduces issues of monitoring (is the policy still converging?), of governance (which features fed which decision, for compliance), and of incident response (a creative that suddenly drops in CTR may indicate fraud, not a policy bug). Our work is upstream of these concerns but it contributes a debuggable, observable substrate on which they can be layered.
+
+\item \textbf{Computational cost as a hidden constraint.} Advertisement-selection decisions must be made within tens of milliseconds, often on commodity hardware shared with thousands of other concurrent decisions. The wall-clock cost of fancy algorithms (e.g.\ KL-UCB's per-step KL projection, or deep-RL inference) is rarely budgeted in academic papers but is decisive in production. Our $\mathcal{O}(K)$-per-step algorithms are explicitly chosen to fit within these constraints.
+
+\item \textbf{Lack of accessible benchmarks for new algorithms.} A researcher who proposes a new bandit variant typically must implement every baseline from scratch in order to evaluate it. Our simulator's unified \texttt{BaseAgent} interface makes it trivial to add a new algorithm and immediately see how it compares against the five established baselines on a shared environment trajectory.
+\end{enumerate}
+
+\subsection{Problem Identification}
+The growing competition for user attention has made the choice of which advertisement to serve a major challenge for platforms, advertisers, and content owners. Selecting the best advertisement precisely and accurately is difficult because user engagement is influenced by a variety of factors such as the historical click probability of each creative, the revenue paid per click, the freshness of the content, the user's session context, and the time of day. Existing rule-based methods often overlook the dynamic and stochastic nature of these factors, which can lead to imprecise serving decisions and unfair impression allocations. This causes wasted ad spend, missed revenue opportunities, and a poor user experience for both viewers and advertisers. Additionally, many existing systems struggle to work effectively with the bandit-style feedback that is naturally observed in advertising, where only the reward of the served arm is revealed, not the rewards of the alternatives. Without a principled exploration--exploitation policy, platforms find it very hard to discover and lock onto high-performing creatives, and advertisers are not sure how to interpret their measured campaign performance.
+
+Taken together, the gaps catalogued in Section~2.2 point to a single overarching problem statement: \emph{how to design, implement and evaluate a transparent, reproducible, dependency-light reinforcement-learning system that selects web advertisements under realistic uncertainty about both click probability and per-click revenue, while making its decision-by-decision behaviour inspectable for both researchers and learners}. The problem is operationally simple to state but technically rich, because the right answer depends jointly on the choice of algorithm, the choice of reward signal, the operational horizon, and the engineering constraints (compute budget, debugging affordances, audit trail) under which the system will be deployed.
+
+Consequently, there is a clear need for a reinforcement-learning system that is capable of handling bandit feedback, identifying significant contributors among the arms, exposing its internal decision logic, supporting both stationary and non-stationary configurations, and delivering precise and explainable decisions to help in better revenue planning and risk management for advertising platforms. The remainder of this report describes how we build, evaluate and reflect on a system that addresses these requirements.
+\newpage

@@ -11,24 +11,6 @@ export const ALGO_COLORS = {
 
 export const ALGORITHM_CONFIGS: AgentConfig[] = [
   {
-    id: 'epsilon-greedy',
-    name: 'Epsilon-Greedy',
-    shortName: 'ε-Greedy',
-    color: '#7C3AED',
-    params: { epsilon: 0.1 },
-    description: 'Explores randomly with probability ε, exploits best known arm otherwise.',
-    formula: 'a = argmax Q(a) with prob 1-ε, else random',
-  },
-  {
-    id: 'epsilon-greedy-decaying',
-    name: 'Decaying ε-Greedy',
-    shortName: 'ε-Decay',
-    color: '#2563EB',
-    params: { epsilon0: 1.0, decayRate: 0.001 },
-    description: 'Starts with high exploration, gradually shifts to exploitation as ε decays.',
-    formula: 'ε(t) = ε₀ / (1 + decay·t)',
-  },
-  {
     id: 'ucb1',
     name: 'UCB1',
     shortName: 'UCB1',
@@ -36,6 +18,15 @@ export const ALGORITHM_CONFIGS: AgentConfig[] = [
     params: { c: 1.0 },  // c=1 is the proven optimal constant for UCB1 on Bernoulli bandits
     description: 'Selects arm with highest upper confidence bound, balancing exploration automatically.',
     formula: 'UCB(a) = Q(a) + c·√(ln t / N(a))',
+  },
+  {
+    id: 'epsilon-greedy',
+    name: 'Epsilon-Greedy',
+    shortName: 'ε-Greedy',
+    color: '#7C3AED',
+    params: { epsilon: 0.1 },
+    description: 'Explores randomly with probability ε, exploits best known arm otherwise.',
+    formula: 'a = argmax Q(a) with prob 1-ε, else random',
   },
   {
     id: 'thompson',
@@ -55,17 +46,24 @@ export const ALGORITHM_CONFIGS: AgentConfig[] = [
     description: 'Selects an ad slot uniformly at random every step. The baseline — no learning.',
     formula: 'a ~ Uniform(0, N-1)',
   },
+  {
+    id: 'epsilon-greedy-decaying',
+    name: 'Decaying ε-Greedy',
+    shortName: 'ε-Decay',
+    color: '#2563EB',
+    params: { epsilon0: 1.0, decayRate: 0.001 },
+    description: 'Starts with high exploration, gradually shifts to exploitation as ε decays.',
+    formula: 'ε(t) = ε₀ / (1 + decay·t)',
+  },
 ];
 
-// UCB-favourable defaults: Revenue mode, 4 arms, stationary.
-// Key insight: Thompson Sampling models click probability (Beta distribution)
-// and always gravitates toward the highest-CTR arm.  In revenue mode the
-// true winner has LOW CTR but HIGH revenue/click — UCB1 discovers this because
-// it tracks sample-mean reward (CTR × rev) without any distributional assumption,
-// while Thompson gets permanently misled by raw click rates.
+// Defaults showcase the non-stationary, revenue-mode scenario where Thompson
+// Sampling's strength (Bayesian adaptation) trades off against UCB1's robustness
+// to revenue-distribution traps. Non-stationary on by default so drifting CTRs
+// stress every algorithm's ability to keep tracking the true winner over time.
 export const DEFAULT_ENV_CONFIG = {
   numArms: 4,
-  nonStationary: false,
+  nonStationary: true,
   driftRate: 0.002,
   rewardMode: 'revenue' as const,
   totalSteps: 500,

@@ -1,0 +1,16 @@
+% ---------- Preface (vi) ----------
+\begin{center}{\Large\bfseries PREFACE}\end{center}
+\vspace{1em}
+
+The rapid growth of digital advertising has made it increasingly important to choose, in real time, which advertisement to show to which user. This project focuses on building a predictive system that uses reinforcement learning algorithms to select advertisements based on the trade-off between exploring new options and exploiting known high-performing ones.
+
+The simulated environment used in this study models a real ad-server with attributes such as the number of advertisement slots, the click-through rate of each slot, the revenue per click and a configurable drift in the underlying distribution. These factors are known to influence which ad performs best at any given time. The main goal is to apply reinforcement learning techniques to discover decision policies that maximise total clicks and total revenue over a session.
+
+For this purpose, multiple bandit algorithms were implemented, including the Random baseline, $\varepsilon$-Greedy, Decaying $\varepsilon$-Greedy, the Upper Confidence Bound algorithm (UCB1), and Thompson Sampling. The simulator undergoes pre-set configuration steps such as choosing the number of arms, encoding the reward mode, and splitting the run into training and evaluation phases to evaluate model performance effectively.
+
+The performance of each model was assessed using evaluation metrics such as cumulative reward, cumulative regret, rolling click-through rate and convergence step.
+
+Among all the algorithms tested, the UCB1 model delivered the most accurate result, demonstrating strong capability in handling the exploration--exploitation trade-off and in adapting to the revenue-mode reward signal without being misled by raw click rates.
+
+In conclusion, this project highlights the potential of reinforcement learning in selecting advertisements with high accuracy. The results suggest that such a model can be a valuable tool for advertising platforms to optimise serving decisions and improve revenue generation.
+\newpage

@@ -1,0 +1,347 @@
+\section{MATERIALS AND METHODS}
+
+\subsection{Dataset(s) Description}
+The dataset used in this project is a synthetic, fully configurable bandit environment that simulates a real ad-server. It captures the most important factors that influence advertisement performance: the number of competing creatives, the true click-through rate of each one, the revenue paid per click, the reward signal that the platform actually wants to optimise, and an optional non-stationary drift in the underlying click probabilities. Each ``arm'' of the bandit represents one advertisement; on every step the agent picks one arm to serve, after which the environment draws a Bernoulli click outcome conditioned on that arm's true CTR. Each of these features helps in selecting the best advertisement: the CTR captures how likely a user is to click, the revenue captures how much the click is worth, and the reward mode determines which of these two quantities the agent is rewarded for maximising. The dataset is fully synthetic so that ground-truth regret can be computed exactly; this is the standard methodology in bandit research because it allows the experimenter to (i) control the underlying reward distribution exactly, (ii) compute ground-truth regret (impossible with logged data alone), (iii) repeat experiments under identical conditions, and (iv) sweep over scenario parameters that would be confounded in real logged data.
+
+The default configuration uses four arms ($K = 4$) and a five-hundred-step horizon ($T = 500$), with the reward signal switched between binary click (CTR mode) and continuous revenue-per-click (Revenue mode). The four arms have CTRs of $\{0.25, 0.50, 0.60, 0.40\}$ and revenues-per-click of $\{\$3.00, \$1.00, \$0.80, \$1.20\}$. This scenario is constructed so that the highest-revenue arm (Arm~A) has the \emph{lowest} CTR (a low-frequency but high-value creative), while the highest-CTR arm (Arm~C) has only modest revenue. This is a realistic configuration for premium versus filler creatives, and it is one in which Thompson Sampling (which models the click distribution) and UCB1 (which models the reward distribution) make qualitatively different decisions --- a deliberate pedagogical choice that exposes the reward-mismatch effect described in Section~4.
+
+Because the parameters can be varied freely through the UI, the same code base can simulate scenarios ranging from a well-separated easy environment (large gaps between arms) to a near-tied difficult environment (very small gaps), and from a small two-armed problem to an eight-armed problem. For exploratory experiments the system also supports random scenario generation, where arm CTRs are drawn uniformly from $[0.05, 0.65]$ and per-click revenues uniformly from $[0.5, 4.0]$~USD. The seed used for both the scenario and the environment's per-step Bernoulli draws is logged with every saved run, so any scenario can be reproduced exactly. Across the experimental campaign we report results both on the default scenario and aggregated across 100 randomly generated scenarios to test sensitivity. \cref{tab:features} summarises the configurable input features.
+
+\begin{table}[H]
+\centering
+\caption{Dataset Description about the input features}
+\label{tab:features}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{|p{3.5cm}|X|X|}
+\hline
+\rowcolor{tabhead}\textbf{Feature name} & \textbf{Description} & \textbf{Value}\\
+\hline
+Arm index ($a$)              & The advertisement slot selected on a given step. & Integer in $\{0,1,\ldots,K-1\}$, default $K=4$.\\
+\hline
+True CTR ($p_a$)             & The true click probability of arm $a$. & Real in $(0,1)$; default arms use $\{0.25, 0.50, 0.60, 0.40\}$.\\
+\hline
+Revenue per click ($r_a$)    & The payment received when arm $a$ is clicked. & Positive real (USD); default arms use $\{3.00, 1.00, 0.80, 1.20\}$.\\
+\hline
+Reward mode                  & Which signal the agent is rewarded for. & CTR mode ($R=c_a$) or Revenue mode ($R = c_a r_a$).\\
+\hline
+Non-stationarity             & Whether arm CTRs drift over time. & Boolean (default = False).\\
+\hline
+Drift rate ($\beta_d$)       & Phase rate of sinusoidal drift when enabled. & Real in $[0, 0.01]$ (default 0.002).\\
+\hline
+Total steps ($T$)            & Length of one simulated session. & Integer (default 500).\\
+\hline
+Random seed                  & Seed for both scenario generation and per-step Bernoulli draws. & 32-bit integer (logged on every saved run).\\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Schematic Layout / Model Diagram}
+The diagram in \cref{fig:model-diagram} outlines the high-level process followed to optimise advertisement selection using reinforcement learning. The pipeline starts by configuring a simulated ad environment, which is then initialised with arm CTRs and revenues drawn from the user's configuration store. Next, the encoding step converts the reward mode (CTR or Revenue) and the stationarity flag into a typed TypeScript enumeration that the engine can consume. Exploratory pre-checks are then carried out with tools such as Recharts and Tailwind-styled dashboard panels to make sure the configured CTRs and revenues are visualised correctly before the run begins. The session is divided into a learning phase (100\% of the steps used for online learning) and a terminal evaluation step that computes the final aggregate metrics. Five reinforcement-learning algorithms --- Random, $\varepsilon$-Greedy, Decaying $\varepsilon$-Greedy, UCB1 and Thompson Sampling --- are selected via the algorithm-selector UI and instantiated by the simulation engine. They are then run in parallel on the same trajectory. Lastly, the algorithms are assessed using metrics like cumulative reward, cumulative regret, rolling click-through rate and convergence step, and the results are persisted to local storage so that long-term win rates can be analysed in the History view.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  >=Latex, font=\footnotesize,
+  every node/.style={align=center},
+  startend/.style={ellipse, draw=black!70, fill=gray!15, minimum width=18mm, minimum height=8mm, inner sep=2pt},
+  step/.style={rectangle, rounded corners=2pt, draw=black!70, fill=blue!10, minimum width=30mm, minimum height=10mm, inner sep=3pt},
+  decision/.style={rectangle, rounded corners=2pt, draw=black!70, fill=orange!20, minimum width=30mm, minimum height=10mm, inner sep=3pt},
+  node distance=6mm and 8mm,
+]
+\node[startend] (start) {Start};
+\node[step, below=of start] (env) {Environment\\Configuration};
+\node[step, below=of env] (pre) {Pre-checks\\(Recharts visualisation)};
+\node[decision, below=of pre] (alg) {Algorithm Selection\\(Random, $\varepsilon$-G, $\varepsilon$-Dec, UCB1, TS)};
+\node[step, below=of alg] (sim) {Simulation tick\\(parallel agents on shared env.)};
+\node[step, below=of sim] (eval) {Evaluation\\(reward, regret, rolling CTR, $\tau$)};
+\node[startend, below=of eval] (end) {End};
+
+\draw[->,thick] (start) -- (env);
+\draw[->,thick] (env) -- (pre);
+\draw[->,thick] (pre) -- (alg);
+\draw[->,thick] (alg) -- (sim);
+\draw[->,thick] (sim) -- (eval);
+\draw[->,thick] (eval) -- (end);
+
+% feedback loop arrow
+\draw[->,thick,dashed,gray] (eval.east) -- ++(1.6,0) |- (sim.east) node[midway, right, black] {next step};
+\end{tikzpicture}
+\caption{Model Diagram}
+\label{fig:model-diagram}
+\end{figure}
+
+The architecture designed for advertisement-selection prediction consists of a well-structured series of layered components, each with a single well-defined responsibility. The first layer is the environment, implemented in \texttt{src/rl/core/Environment.ts} as the \texttt{AdEnvironment} class. It owns the ground truth: for each advertisement arm $a \in \{1,\ldots,K\}$ it stores a true click probability $p_a \in (0,1)$ and a per-click revenue $r_a \in \mathbb{R}_{>0}$. On every step the environment receives an arm index from the simulation engine, draws a Bernoulli sample $c_a \sim \text{Bern}(p_a)$, and returns the pair $(R, c_a)$ where the scalar reward $R$ is determined by the configured reward mode.
+
+The second layer is the agent pool. Each agent is an independent implementation of a different decision policy, sharing only an abstract base interface that requires every concrete agent to expose two methods: a \texttt{selectArm} method that returns its choice of action, and an \texttt{update} method that ingests the observed reward and refines its internal model. Five concrete agents are implemented under \texttt{src/rl/agents/}: \texttt{Random.ts}, \texttt{EpsilonGreedy.ts}, \texttt{EpsilonGreedyDecaying.ts}, \texttt{UCB1.ts} and \texttt{ThompsonSampling.ts}.
+
+The third layer is the simulation engine itself, implemented in \texttt{src/rl/SimulationEngine.ts}. It orchestrates synchronous execution of all selected agents on a shared environment: on every tick it iterates over the agent pool, queries each agent for an arm, applies that arm to the environment to obtain a reward, computes the regret against the oracle, records the step on the agent, and calls the agent's \texttt{update}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  >=Latex, font=\footnotesize,
+  every node/.style={align=left},
+  block/.style={rectangle, rounded corners=3pt, draw=black!70, fill=blue!8, minimum width=85mm, minimum height=11mm, inner sep=4pt},
+  num/.style={circle, draw=black!70, fill=blue!25, minimum size=6mm, inner sep=0pt, font=\bfseries\footnotesize},
+  node distance=3.5mm,
+]
+\node[block] (b1) {\hspace*{8mm}\textbf{Environment Setup} --- \texttt{AdEnvironment} class\\\hspace*{8mm}Per-arm $p_a, r_a$, reward mode, optional drift};
+\node[num] at (b1.west) {1};
+\node[block, below=of b1] (b2) {\hspace*{8mm}\textbf{Agent Initialisation} --- \texttt{BaseAgent} subclasses\\\hspace*{8mm}Random, $\varepsilon$-G, Decaying $\varepsilon$-G, UCB1, Thompson};
+\node[num] at (b2.west) {2};
+\node[block, below=of b2] (b3) {\hspace*{8mm}\textbf{Pre-run Visualisation} --- Dashboard pre-checks\\\hspace*{8mm}Configured CTR / revenue bars, parameter sliders};
+\node[num] at (b3.west) {3};
+\node[block, below=of b3] (b4) {\hspace*{8mm}\textbf{Simulation Loop} --- \texttt{SimulationEngine.tick(\dots)}\\\hspace*{8mm}selectArm $\to$ env.step $\to$ update, parallel agents};
+\node[num] at (b4.west) {4};
+\node[block, below=of b4] (b5) {\hspace*{8mm}\textbf{Metric Computation} --- $G_T, \mathcal{R}_T, \widehat{\text{CTR}}_t, \tau$\\\hspace*{8mm}selection share, entropy, regret bounds};
+\node[num] at (b5.west) {5};
+\node[block, below=of b5] (b6) {\hspace*{8mm}\textbf{Output \& Persistence} --- charts, leaderboard, history\\\hspace*{8mm}\texttt{runHistoryStore} $\to$ \texttt{localStorage} for replay};
+\node[num] at (b6.west) {6};
+
+\draw[->,thick] (b1) -- (b2);
+\draw[->,thick] (b2) -- (b3);
+\draw[->,thick] (b3) -- (b4);
+\draw[->,thick] (b4) -- (b5);
+\draw[->,thick] (b5) -- (b6);
+\end{tikzpicture}
+\caption{Model Architecture}
+\label{fig:model-arch}
+\end{figure}
+
+The fourth layer is the state and persistence layer, built on Zustand. It exposes four stores: \texttt{simulationStore} (live agent statistics, current step, status enum), \texttt{configStore} (selected agents, environment configuration, playback speed), \texttt{uiStore} (active page, drawer state, active chart tab) and \texttt{runHistoryStore} (persisted completed runs, with a localStorage adapter). The fifth and final layer is the presentation layer, built with React 19, Tailwind CSS, Radix UI and Recharts. It provides four primary views (Simulator, Dashboard, History, About) routed through the UI store. In the training stage of the project, algorithms used are Random, $\varepsilon$-Greedy, Decaying $\varepsilon$-Greedy, UCB1 and Thompson Sampling, all driven through the engine described above. Finally, each model's effectiveness is evaluated through cumulative reward, cumulative regret, rolling CTR and convergence step, with visual representations of the results helping in interpreting and comparing the efficiency of each model.
+
+\subsection{Methodologies Adopted}
+The project implements an organised approach to selecting advertisements using reinforcement-learning models. First, the environment configuration is set up: number of arms, per-arm CTR, per-arm revenue, reward mode, optional drift and total steps. The first step includes initialising the per-arm counters and the value estimates; for Thompson Sampling, the Beta posteriors $(\alpha, \beta)$ are also initialised. Next, the simulation engine is created and given the list of agents to run in parallel. After the environment is ready, the agents are stepped through the same trajectory: on every tick each agent selects an arm, the environment returns a reward, and the agent updates its internal state. We now describe each of the five algorithms in detail.
+
+\subsubsection*{Notation}
+Let $K$ be the number of arms, $t = 1, 2, \ldots$ index discrete rounds, and $a_t \in \{1,\ldots,K\}$ denote the arm chosen at round $t$. The environment returns reward $R_t \in \mathbb{R}$. For each arm $a$ let $N_t(a)$ be the number of times arm $a$ has been pulled up to round $t$, and let $Q_t(a)$ be the running sample-mean estimate of arm $a$'s expected reward. All five agents update $Q_t$ incrementally in $O(1)$ space per arm via
+\begin{equation}
+Q_t(a) \;\leftarrow\; Q_{t-1}(a) + \frac{R_t - Q_{t-1}(a)}{N_t(a)}.
+\label{eq:Qincr}
+\end{equation}
+The instantaneous regret of an agent's action at step $t$ is $\rho_t = \mu^\star - \mu_{a_t}$ where $\mu^\star = \max_a \mu_a$ is the oracle's optimal expected reward.
+
+\begin{itemize}
+\item \textbf{Random Selection (baseline):}
+The simplest possible policy. On each step it picks an arm uniformly at random and never learns. Its expected cumulative reward grows linearly at the average per-arm reward rate, and its cumulative regret also grows linearly in $T$. It serves as the no-learning lower bound against which the other agents are compared.
+\begin{algorithm}[H]
+\KwIn{Number of arms $K$}
+\For{$t=1,2,\ldots$}{
+  $a_t \leftarrow$ uniform random integer in $\{1,\ldots,K\}$\;
+  Observe reward $R_t$\;
+}
+\caption{Random Selection}
+\end{algorithm}
+
+\item \textbf{$\varepsilon$-Greedy:}
+With probability $\varepsilon$ the agent picks a random arm (exploration); with probability $1-\varepsilon$ it picks the empirical-best arm (exploitation). After every observed reward the per-arm sample mean is updated incrementally per \cref{eq:Qincr}. The default exploration rate is $\varepsilon = 0.1$. The strength of $\varepsilon$-Greedy is its absolute simplicity; the weakness is that it explores forever, accumulating $\Theta(\varepsilon T)$ regret on the explored fraction even after the optimal arm has been identified.
+\begin{algorithm}[H]
+\KwIn{Number of arms $K$, exploration rate $\varepsilon \in [0,1]$}
+Initialise $Q(a) \leftarrow 0,\ N(a) \leftarrow 0$ for $a=1,\ldots,K$\;
+\For{$t=1,2,\ldots$}{
+  Draw $u \sim \mathrm{Uniform}[0,1]$\;
+  \eIf{$u < \varepsilon$}{$a_t \leftarrow$ uniform random arm\;}
+       {$a_t \leftarrow \arg\max_a Q(a)$\;}
+  Observe reward $R_t$; $N(a_t) \leftarrow N(a_t)+1$\;
+  $Q(a_t) \leftarrow Q(a_t) + (R_t - Q(a_t))/N(a_t)$\;
+}
+\caption{$\varepsilon$-Greedy}
+\end{algorithm}
+
+\item \textbf{Decaying $\varepsilon$-Greedy:}
+This variant addresses the linear-regret pathology of fixed $\varepsilon$ by annealing the exploration rate over time using $\varepsilon(t) = \varepsilon_0 / (1 + \beta t)$, with $\varepsilon_0 = 1.0$ and $\beta = 10^{-3}$ as defaults. The agent starts in pure exploration and gradually shifts to exploitation. With an appropriate schedule it achieves sub-linear regret asymptotically, but the schedule is sensitive to the unknown gap between the best and second-best arm.
+\begin{algorithm}[H]
+\KwIn{Number of arms $K$, initial rate $\varepsilon_0$, decay $\beta$}
+Initialise $Q(a) \leftarrow 0,\ N(a) \leftarrow 0$\;
+\For{$t=1,2,\ldots$}{
+  $\varepsilon \leftarrow \varepsilon_0 / (1 + \beta t)$\;
+  Draw $u \sim \mathrm{Uniform}[0,1]$\;
+  \eIf{$u < \varepsilon$}{$a_t \leftarrow$ uniform random arm\;}
+       {$a_t \leftarrow \arg\max_a Q(a)$\;}
+  Observe reward $R_t$; $N(a_t) \leftarrow N(a_t)+1$\;
+  $Q(a_t) \leftarrow Q(a_t) + (R_t - Q(a_t))/N(a_t)$\;
+}
+\caption{Decaying $\varepsilon$-Greedy}
+\end{algorithm}
+
+\item \textbf{Upper Confidence Bound (UCB1):}
+UCB1 is a deterministic policy that uses ``optimism under uncertainty'' rather than stochastic exploration. After pulling each arm once to initialise, it selects the arm with the highest upper confidence bound:
+\begin{equation}
+a_t \;=\; \arg\max_a \;\Bigl[\, Q_{t-1}(a) + c\sqrt{\ln t / N_{t-1}(a)} \,\Bigr],
+\label{eq:ucb}
+\end{equation}
+where $c$ is a confidence constant. For Bernoulli arms the optimal value is $c = 1$, which is the default our implementation uses. UCB1 achieves the asymptotically optimal logarithmic regret bound and requires no hyperparameter tuning. A practical advantage in production is that it is fully deterministic given the random-draw history of the environment, which makes it easy to reproduce, audit and explain.
+\begin{algorithm}[H]
+\KwIn{Number of arms $K$, confidence constant $c$}
+Initialise $Q(a)\leftarrow 0,\ N(a)\leftarrow 0,\ T_{\text{steps}}\leftarrow 0$\;
+Pull each arm $a=1,\ldots,K$ once and update $Q(a),N(a),T_{\text{steps}}$\;
+\For{$t=K+1,K+2,\ldots$}{
+  $a_t \leftarrow \arg\max_a \;\bigl\{Q(a) + c\sqrt{\ln T_{\text{steps}} / N(a)}\bigr\}$\;
+  Observe reward $R_t$; $T_{\text{steps}} \leftarrow T_{\text{steps}}+1$\;
+  $N(a_t) \leftarrow N(a_t)+1$\;
+  $Q(a_t) \leftarrow Q(a_t) + (R_t - Q(a_t))/N(a_t)$\;
+}
+\caption{UCB1}
+\end{algorithm}
+
+\item \textbf{Thompson Sampling:}
+A Bayesian approach. The agent maintains a Beta posterior over each arm's success probability, samples one value from each posterior at every step, and picks the arm with the largest sample. After observing a binary reward $r \in \{0,1\}$ the posterior is updated via Beta--Bernoulli conjugacy: $\alpha_{a_t} \mathrel{+}= r$ and $\beta_{a_t} \mathrel{+}= 1-r$. The default prior is $\mathrm{Beta}(1, 1)$ (uniform). Our implementation samples Beta variates by drawing two Gamma variates via the Marsaglia--Tsang algorithm and normalising.
+\begin{algorithm}[H]
+\KwIn{Number of arms $K$, prior $\alpha_0, \beta_0$}
+\For{$a=1,\ldots,K$}{$\alpha_a \leftarrow \alpha_0$;\quad $\beta_a \leftarrow \beta_0$\;}
+\For{$t=1,2,\ldots$}{
+  \For{$a=1,\ldots,K$}{$\tilde{\theta}_a \leftarrow$ sample from $\mathrm{Beta}(\alpha_a, \beta_a)$\;}
+  $a_t \leftarrow \arg\max_a \tilde{\theta}_a$\;
+  Observe binary reward $R_t \in \{0,1\}$\;
+  $\alpha_{a_t} \leftarrow \alpha_{a_t} + R_t$;\quad $\beta_{a_t} \leftarrow \beta_{a_t} + (1-R_t)$\;
+}
+\caption{Thompson Sampling (Beta--Bernoulli)}
+\end{algorithm}
+
+\paragraph{Note on the revenue-mode subtlety.}
+Thompson Sampling as implemented assumes binary rewards, which corresponds exactly to the CTR reward mode. In Revenue mode the reward is $r_a$ on a click and $0$ otherwise; the Beta posterior still models the underlying \emph{click probability}, but the samples used to compare arms are click probabilities, not revenues. This means Thompson Sampling will converge to the arm with the highest click probability, which may not be the arm with the highest revenue. UCB1, by contrast, builds its mean estimate from the observed reward signal (which already includes $r_a$) and therefore converges to the revenue-optimal arm. This subtle but consequential reward-mismatch is one of the more interesting empirical observations exposed by the simulator (Section~4.3.7).
+\end{itemize}
+
+The final stage is that each agent's behaviour is evaluated on the same trajectory through the engine, and the engine returns the per-agent statistics at every step. In order to evaluate the performance of each model, evaluation metrics used are cumulative reward, cumulative regret, rolling CTR and convergence step. These metrics help compare the accuracy and reliability of each algorithm. With the environment configured in TypeScript and the agents implemented in \texttt{src/rl/}, implementation is done using React 19 and Vite 8 in a single-page web application. The agent with the best evaluation results is recognised as the most effective for the chosen reward mode and arm configuration.
+
+\subsection{Tools Used}
+The project uses several important tools to design, run and visualise the reinforcement-learning experiments. It is built with TypeScript 5.9 in the Vite~8 development platform, which allows fast bundling and easy hot-reload for the React 19 user interface. Libraries such as Zustand and the React Context API are used to manage application state, while Recharts and Tailwind CSS are used to visualise simulation results and design the dashboard. The project depends on a from-scratch RL core in \texttt{src/rl/} to provide the five reinforcement-learning algorithms (Random, $\varepsilon$-Greedy, Decaying $\varepsilon$-Greedy, UCB1, Thompson Sampling) and the environment, and to compute performance metrics such as cumulative reward and cumulative regret. Altogether, these tools provide a solid base for environment design, agent training and result evaluation.
+
+\begin{itemize}
+\item \textbf{React 19:} React is critical in the presentation layer because it allows efficient component re-rendering driven by store updates. It offers a hook-based functional-component model, which makes it simpler to design, structure, and present the simulation. Through hooks such as \texttt{useEffect}, \texttt{useState} and \texttt{useMemo}, derived state can be expressed declaratively. In summary, React plays a vital role in simplifying UI structure, re-rendering, and producing live views within the project.
+
+\item \textbf{TypeScript 5.9:} TypeScript is an essential language for the project that contributes significantly to correctness by enforcing static types on every agent, environment and store. Its powerful type system supports the representation and manipulation of complex multi-agent state, making it less difficult to refactor large modules and catch shape mismatches at compile time rather than at run time. Discriminated unions are used heavily to encode the reward-mode and the agent-id enumerations.
+
+\item \textbf{Vite 8:} Vite is the build tool and development server used in this project. It uses native ES-module imports during development for near-instantaneous hot-module-replacement, and Rollup for production bundling. The choice of Vite over Webpack reduces cold-start time of the dev server from tens of seconds to under one second, materially improving the development loop.
+
+\item \textbf{Recharts 3.8:} Recharts is a widely used React library for creating chart visualisations that aid in analysing and interpreting results, particularly in this project. It is used to build the cumulative-reward chart, the cumulative-regret chart, the rolling-CTR chart and the exploration heat-map, helping to better understand styles and consequences through clean and informative plots. Long series are downsampled to 500 points to keep DOM count low even on 10\,000-step runs.
+
+\item \textbf{Tailwind CSS 3.4:} Tailwind CSS is a utility-first styling framework designed for developing visually attractive and consistent dashboards. Built around design tokens, it simplifies the process of producing complex layouts along with grids, cards and responsive panels. Its user-friendly utility classes make it perfect for exploring styles and ensuring a uniform look, making it a helpful tool in this project.
+
+\item \textbf{Zustand 5.0:} Zustand is a hook-based state-management library that plays a key role in the data flow of this project. It supports various tasks such as live agent statistics, environment configuration, and history persistence. The implementation part shows the use of Zustand's \texttt{create} function and selectors to read the slice of state that each chart needs, keeping re-renders minimal even when the simulation is producing many updates per second.
+
+\item \textbf{Radix UI:} Radix UI provides accessible, unstyled primitive components --- Dialog, Popover, Select, Slider, Switch, Tabs and Tooltip --- that ship the keyboard interactions, focus management and ARIA semantics required for an accessible UI without prescribing visual design. Combined with Tailwind classes, they produce a design system that is both polished and accessible.
+
+\item \textbf{Node.js 20 LTS:} The development toolchain runs on Node.js 20, the current Long-Term-Support release. It provides the JavaScript runtime for Vite, npm and ESLint, but it is not required at run time --- the production build is purely client-side JavaScript that runs in any modern browser.
+
+\item \textbf{ESLint 9 + typescript-eslint:} Static code quality is enforced through ESLint with the React-hooks and TypeScript plugins. Lint runs on every commit and prevents common React pitfalls (missing dependency arrays, unused state) and TypeScript misuse (implicit \texttt{any}, unsafe member access).
+
+\item \textbf{Git:} Version control is provided by Git. Each meaningful change is recorded as a separate commit with a descriptive message, which makes it easy to bisect bugs and to understand the evolution of the algorithmic core.
+\end{itemize}
+
+\subsection{Evaluation Metrics and Performance Measures}
+In the ``Web Advertisement Optimization Using Reinforcement Learning'' project, several metrics are used to evaluate how well each agent performs. Together, these metrics provide a clear picture of an agent's decision-making process. They are computed live during every simulation and persisted to the run history on completion.
+
+\noindent Evaluation metrics that are used in this code include:
+
+\begin{enumerate}
+\item \textbf{Cumulative Reward ($G_T$):} The sum of rewards collected by the agent up to step $T$. It is the raw measure of how well the agent has performed; a higher value indicates a better policy.
+\begin{equation}
+G_T \;=\; \sum_{t=1}^{T} R_t
+\label{eq:reward}
+\end{equation}
+Where:
+\begin{itemize}
+  \item $R_t$ is the reward observed at step $t$ (either binary click in CTR mode or continuous revenue in Revenue mode).
+  \item $T$ is the total number of simulated steps.
+\end{itemize}
+
+\item \textbf{Cumulative Regret ($\mathcal{R}_T$):} The canonical bandit-theory metric, defined as the difference between the oracle's expected reward and the agent's observed reward, accumulated over the run. Lower is better; logarithmic growth indicates a learning policy, while linear growth indicates a non-learning one.
+\begin{equation}
+\mathcal{R}_T \;=\; \sum_{t=1}^{T} \bigl(\mu^\star - R_t\bigr)_+, \qquad \mu^\star \;=\; \max_a \mathbb{E}[R \mid a]
+\label{eq:regret}
+\end{equation}
+The notation $(x)_+ = \max(0, x)$ ensures the per-step regret is non-negative even when an exceptional Bernoulli draw on a sub-optimal arm temporarily exceeds the oracle's mean.
+
+\item \textbf{Rolling Click-Through Rate ($\widehat{\text{CTR}}_t$):} The sliding-window average of the binary click signal, computed over a window of $W$ steps. It complements regret because it measures \emph{recent} performance and is the metric ad operators are most familiar with.
+\begin{equation}
+\widehat{\text{CTR}}_t \;=\; \frac{1}{W} \sum_{s=t-W+1}^{t} c_s, \qquad W = 50
+\label{eq:rollingctr}
+\end{equation}
+
+\item \textbf{Convergence Step ($\tau$):} The earliest step at which the rolling CTR-equivalent reward reaches and stays at $80\%$ of the optimal expected reward for the remainder of the run. It operationalises the notion of ``time to find the answer'' and is useful for comparing how quickly each agent locks onto a good arm.
+\begin{equation}
+\tau \;=\; \min \bigl\{\, t : \widehat{\text{CTR}}_s \;\ge\; 0.8\,\mu^\star \;\; \forall s \ge t \,\bigr\}
+\label{eq:converge}
+\end{equation}
+
+\item \textbf{Selection Share of the Optimal Arm ($S_T$):} The fraction of impressions allocated to the oracle-optimal arm over the run.
+\begin{equation}
+S_T \;=\; \frac{N_T(a^\star)}{T}, \qquad a^\star \;=\; \arg\max_a \mu_a
+\label{eq:share}
+\end{equation}
+A value close to one indicates strong commitment to the best arm; a value close to $1/K$ indicates near-random behaviour.
+
+\item \textbf{Arm-Selection Entropy ($H_T$):} The Shannon entropy of the empirical arm-selection distribution. Low entropy indicates a committed policy; high entropy indicates a still-exploring or uniform-random policy.
+\begin{equation}
+H_T \;=\; -\sum_{a=1}^{K} \frac{N_T(a)}{T} \log_2 \frac{N_T(a)}{T}
+\label{eq:entropy}
+\end{equation}
+A Random baseline has $H_T \approx \log_2 K$ (maximum); a converged UCB1 has $H_T \approx 0$.
+\end{enumerate}
+
+These six metrics are computed live during the simulation, displayed in the dashboard, and persisted at the end of each run so that long-term win rates per algorithm can be aggregated in the History view.
+
+\subsection{Experimental Setup}
+This subsection complements the architectural description in Section~3.2 by walking through the concrete code layout, the key data structures, and the engineering choices that allow the simulator to run all five agents in real time while still being auditable line-by-line.
+
+\paragraph{Repository layout.}
+The project is organised as a single Vite-managed TypeScript repository. The most relevant directories are summarised below.
+
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\linewidth}{p{4.5cm} X}
+\texttt{src/rl/core/}       & The abstract \texttt{BaseAgent} class and the \texttt{AdEnvironment} class. These two files contain no UI code and can be exercised from a headless harness.\\
+\texttt{src/rl/agents/}     & One file per concrete agent: \texttt{Random.ts}, \texttt{EpsilonGreedy.ts}, \texttt{EpsilonGreedyDecaying.ts}, \texttt{UCB1.ts}, \texttt{ThompsonSampling.ts}. Each file is between 25 and 90 lines.\\
+\texttt{src/rl/SimulationEngine.ts} & The orchestration layer that drives all selected agents on a shared environment.\\
+\texttt{src/store/}         & Four Zustand stores: \texttt{simulationStore}, \texttt{configStore}, \texttt{uiStore} and \texttt{runHistoryStore}.\\
+\texttt{src/components/charts/} & Recharts wrappers for the four chart variants.\\
+\texttt{src/components/simulation/} & React components for the live simulator view (agent cards, ad-slot grid, bandit-arms visualisation, optimal-ads card).\\
+\texttt{src/pages/}         & Four top-level routes (Simulator, Dashboard, History, About).\\
+\texttt{src/lib/}           & Pure-utility helpers: \texttt{argmax}, \texttt{clamp}, \texttt{rollingMean}, plus the \texttt{ALGORITHM\_CONFIGS} constant.\\
+\texttt{src/types/}         & Shared TypeScript interfaces, including \texttt{ArmConfig}, \texttt{AgentStats}, \texttt{StepResult} and \texttt{TickResult}.\\
+\end{tabularx}
+
+\paragraph{The agent contract.}
+Every concrete agent extends \texttt{BaseAgent} and exposes the same two methods --- \texttt{selectArm(): number} and \texttt{update(armIndex, reward): void}. The base class additionally provides four shared helpers:
+\begin{itemize}\itemsep0pt
+  \item \texttt{recordStep(result)} --- appends a \texttt{StepResult} to the per-agent step history (capped at 5\,000 entries to bound memory).
+  \item \texttt{randomArm()} --- returns a uniform random arm index.
+  \item \texttt{\_argmax(arr)} --- argmax over a numeric array with deterministic tie-breaking.
+  \item \texttt{getStats()} --- returns a structured-cloned copy of the current agent statistics.
+\end{itemize}
+This narrow interface is what makes the comparison among the five agents fair: no agent has access to private internal state of any other agent, and all of them are stepped through the engine in the same order at every tick.
+
+\paragraph{The simulation engine.}
+\texttt{SimulationEngine.tick(stepsToRun)} is the single entry point that advances the simulation. On each internal step it executes the following sequence:
+\begin{enumerate}\itemsep0pt
+  \item Compute the oracle's optimal expected reward $\mu^\star$ from the environment.
+  \item For each selected agent, in registration order, call \texttt{agent.selectArm()} to get an arm index $a_t$.
+  \item Call \texttt{environment.step($a_t$)} to obtain the pair $(R_t, c_t)$. The environment draws \emph{one} Bernoulli sample for the chosen arm.
+  \item Compute the regret $\rho_t = \max(0, \mu^\star - R_t)$.
+  \item Construct a \texttt{StepResult} carrying $a_t$, $R_t$, $c_t$, $\rho_t$ and the global step index.
+  \item Call \texttt{agent.recordStep(stepResult)} followed by \texttt{agent.update($a_t$, $R_t$)}.
+\end{enumerate}
+The crucial property is that all agents share the same environment instance, which uses the same JavaScript \texttt{Math.random()} stream. Two agents that pick the same arm at the same step see different Bernoulli draws (because the environment draws once per agent per step), but the noise is drawn from the same underlying stream. This is sufficient to make the comparison fair across 100 runs at the aggregate level, while still letting each agent's own random component (its exploration coin-flips, its Beta samples) operate independently.
+
+\paragraph{State updates and the React render loop.}
+Each tick produces an array of \texttt{TickResult} objects, one per agent. The \texttt{useSimulation} hook batches these into a single \texttt{simulationStore.batchUpdate(\ldots)} call, which keeps re-render count low even when the simulation is producing many updates per second. The animation loop is driven by \texttt{requestAnimationFrame} via the custom \texttt{useAnimationFrame} hook, and the user-configurable \texttt{speed} setting (1--50 steps per animation frame) controls how many internal ticks happen per visual frame.
+
+\paragraph{Persisting completed runs.}
+When the engine reports \texttt{isComplete()}, the \texttt{useSimulation} hook constructs a \texttt{RunRecord} containing the timestamp, scenario configuration, random seed, and per-agent terminal metrics, and writes it to \texttt{runHistoryStore}. The history store uses Zustand's \texttt{persist} middleware to serialise this state to \texttt{localStorage}, so saved runs survive page reloads. The History page reads the same store to render the leaderboard and the long-run win-rate analytics.
+
+\paragraph{Type safety and editor support.}
+The entire codebase compiles under \texttt{tsc --strict}. Discriminated-union types are used liberally --- for example, \texttt{rewardMode} is the union \texttt{'ctr' | 'revenue'} rather than a free-form string, which means the compiler catches any branch in the engine that fails to handle one of the two modes. The \texttt{AgentStats} type includes optional fields (\texttt{currentEpsilon}, \texttt{currentUCBScores}, \texttt{thompsonPosteriors}) which are populated only by the relevant agents; the UI then renders these only if defined, so the same dashboard component handles all five agents without branching on agent identity.
+
+\paragraph{Adding a new agent.}
+The unified \texttt{BaseAgent} interface makes it straightforward to add a new bandit policy. The required steps are:
+\begin{enumerate}\itemsep0pt
+  \item Create a new file in \texttt{src/rl/agents/} that extends \texttt{BaseAgent} and implements \texttt{selectArm} and \texttt{update}.
+  \item Register the agent in \texttt{ALGORITHM\_CONFIGS} (in \texttt{src/lib/constants.ts}) with its name, colour, default hyperparameters and a short human-readable description.
+  \item Add the agent's id to the switch statement in \texttt{SimulationEngine.createAgent()} so the engine knows how to instantiate it.
+\end{enumerate}
+No UI changes are required: the algorithm selector, the agent state cards, the leaderboard, and the run-history view all read the registered configuration and render the new agent automatically. This explicit extension hook is what makes the simulator a viable benchmark for future research --- a new algorithm can be added and compared in tens of lines of code.
+
+\paragraph{Test and benchmark harness.}
+A small headless harness in \texttt{src/rl/benchmark.ts} (not bundled into the production build) imports \texttt{SimulationEngine} directly and runs $N = 100$ simulations sequentially without going through React. Its output is the per-run terminal metrics in JSON, which the team used to generate the aggregate tables in Section~4. Because the harness shares the same engine, environment and agent implementations as the live application, any algorithmic regression caught by the harness is also a regression in the deployed simulator --- and vice versa.
+
+\newpage
